@@ -1,0 +1,3 @@
+[submodule "fableplan"]
+	path = fableplan
+	url = git@github.com:lzlrd/fableplan.git

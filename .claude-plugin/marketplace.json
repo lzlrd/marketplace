@@ -8,5 +8,12 @@
   "metadata": {
     "description": "Diab Neiroukh's Claude Code plugins in one place."
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "fableplan",
+      "source": "./fableplan/plugins/fableplan",
+      "description": "Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup for Claude Code. Tracked as a submodule of the lzlrd/fableplan fork.",
+      "category": "workflow"
+    }
+  ]
 }

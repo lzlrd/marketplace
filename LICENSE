@@ -1,5 +1,9 @@
 Required Notice: Copyright 2026 Diab Neiroukh (https://ayoo.by)
 
+Exception: The `fableplan` plugin, included at ./fableplan as a git submodule of the
+bapttiste73/fableplan fork, is licensed under the MIT License (Copyright (c) 2026 bama73000), not the
+PolyForm Noncommercial License below. Its full licence text is at ./fableplan/LICENSE.
+
 # PolyForm Noncommercial License 1.0.0
 
 <https://polyformproject.org/licenses/noncommercial/1.0.0>
