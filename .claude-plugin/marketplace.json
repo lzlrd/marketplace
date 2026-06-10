@@ -1,0 +1,12 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "lzlrd",
+  "owner": {
+    "name": "Diab Neiroukh",
+    "url": "https://github.com/lzlrd"
+  },
+  "metadata": {
+    "description": "Diab Neiroukh's Claude Code plugins in one place."
+  },
+  "plugins": []
+}
