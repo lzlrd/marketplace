@@ -10,6 +10,12 @@
   },
   "plugins": [
     {
+      "name": "offshore",
+      "source": "./offshore",
+      "description": "Bundles the offshore MCP server. Forwards refused prompts to a local abliterated model (Ollama, LM Studio, vLLM, or any OpenAI-compatible endpoint) and returns the unrestricted reply.",
+      "category": "productivity"
+    },
+    {
       "name": "fableplan",
       "source": "./fableplan/plugins/fableplan",
       "description": "Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup for Claude Code. Tracked as a submodule of the lzlrd/fableplan fork.",
