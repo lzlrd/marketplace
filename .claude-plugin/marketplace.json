@@ -10,6 +10,12 @@
   },
   "plugins": [
     {
+      "name": "4man",
+      "source": "./4man",
+      "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features in the requestor's own style. Auto-engages for feature work.",
+      "category": "workflow"
+    },
+    {
       "name": "offshore",
       "source": "./offshore",
       "description": "Bundles the offshore MCP server. Forwards refused prompts to a local abliterated model (Ollama, LM Studio, vLLM, or any OpenAI-compatible endpoint) and returns the unrestricted reply.",
