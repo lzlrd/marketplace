@@ -1,0 +1,28 @@
+{
+  "name": "realfavicon-mcp",
+  "version": "0.2.0",
+  "description": "MCP server for RealFaviconGenerator: generate, check, and change-log favicons.",
+  "author": "Diab Neiroukh <development@ayoo.by>",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "type": "module",
+  "bin": { "realfavicon-mcp": "src/index.ts" },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --target=bun --outdir=dist",
+    "test": "bun test"
+  },
+  "engines": { "bun": ">=1.3" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@realfavicongenerator/generate-favicon": "^0.8.3",
+    "@realfavicongenerator/image-adapter-node": "^0.8.3",
+    "@realfavicongenerator/check-favicon": "^0.8.2",
+    "node-html-parser": "^6.1.13",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}

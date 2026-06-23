@@ -16,6 +16,12 @@
       "category": "workflow"
     },
     {
+      "name": "realfavicon-mcp",
+      "source": "./realfavicon-mcp",
+      "description": "Bundles the realfavicon-mcp MCP server: generate favicon assets and HTML from a master image, audit a live page's favicon setup, and query the RealFaviconGenerator change-log.",
+      "category": "productivity"
+    },
+    {
       "name": "offshore",
       "source": "./offshore",
       "description": "Bundles the offshore MCP server. Forwards refused prompts to a local abliterated model (Ollama, LM Studio, vLLM, or any OpenAI-compatible endpoint) and returns the unrestricted reply.",

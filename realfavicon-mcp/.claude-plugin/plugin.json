@@ -1,0 +1,19 @@
+{
+  "name": "realfavicon-mcp",
+  "version": "0.2.0",
+  "description": "Generate, check, and track favicons via RealFaviconGenerator. Bundles the realfavicon-mcp MCP server (realfavicon_generate, realfavicon_check, realfavicon_changelog).",
+  "author": {
+    "name": "Diab Neiroukh",
+    "url": "https://github.com/lzlrd"
+  },
+  "homepage": "https://github.com/lzlrd/realfavicon-mcp",
+  "repository": "https://github.com/lzlrd/realfavicon-mcp",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": ["mcp", "favicon", "realfavicongenerator", "icons", "web"],
+  "mcpServers": {
+    "realfavicon-mcp": {
+      "command": "sh",
+      "args": ["-c", "cd \"${CLAUDE_PLUGIN_ROOT}\" && bun install --frozen-lockfile 1>&2 && exec bun src/index.ts"]
+    }
+  }
+}

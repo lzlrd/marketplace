@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# 4man pipeline (handoff bus + ledger, not source)
+.pipeline/
+
+# Logs & env
+*.log
+.env
+.env.*
+
+# OS
+.DS_Store
