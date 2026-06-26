@@ -10,6 +10,12 @@
   },
   "plugins": [
     {
+      "name": "mempalace-hooks",
+      "source": "./mempalace-hooks",
+      "description": "Wires the mempalace MCP memory server into Claude Code: two directive hooks that load palace context at session start and pull the user's writing and coding voice from the MCP palace before writing or coding. MCP-only, with no local CLI and no auto-mining.",
+      "category": "workflow"
+    },
+    {
       "name": "4man",
       "source": "./4man",
       "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features in the requestor's own style. Auto-engages for feature work.",

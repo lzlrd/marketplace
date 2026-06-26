@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/mp-session-start.sh",
+            "timeout": 10,
+            "statusMessage": "Loading mempalace memory…"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/mp-style-pull.sh",
+            "timeout": 15,
+            "statusMessage": "Consulting mempalace…"
+          }
+        ]
+      }
+    ]
+  }
+}

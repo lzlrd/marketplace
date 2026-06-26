@@ -1,0 +1,8 @@
+{
+  "name": "mempalace-hooks",
+  "version": "0.3.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "Wires the mempalace MCP memory server into Claude Code: two directive hooks that load palace context at session start and pull the user's writing/coding voice from the MCP palace before writing or coding. MCP-only — no local CLI, no auto-mining, one source of truth.",
+  "author": { "name": "Diab Neiroukh", "url": "https://ayoo.by" },
+  "keywords": ["memory", "mempalace", "context", "hooks", "style", "mcp"]
+}
