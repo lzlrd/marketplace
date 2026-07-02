@@ -1,0 +1,10 @@
+{
+  "name": "system-design",
+  "version": "0.1.0",
+  "description": "Cloud-agnostic system design across AWS, Azure, and Google Cloud — a six-step loop (requirements → capacity estimation → architecture → cloud service selection → Well-Architected review → design doc) grounded in each vendor's Well-Architected framework. Auto-engages via the 'system-design' skill whenever you architect or scale a system, choose or compare cloud services, size capacity, or review a design; slash-available as /system-design:system-design.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/system-design",
+  "repository": "https://github.com/lzlrd/system-design",
+  "keywords": ["system-design", "architecture", "aws", "azure", "gcp", "well-architected", "cloud", "distributed-systems"]
+}

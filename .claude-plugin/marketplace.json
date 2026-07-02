@@ -16,6 +16,12 @@
       "category": "workflow"
     },
     {
+      "name": "system-design",
+      "source": "./system-design",
+      "description": "Cloud-agnostic system design across AWS, Azure, and Google Cloud: a six-step Well-Architected loop. Auto-engages for architecture and service-selection work.",
+      "category": "workflow"
+    },
+    {
       "name": "4man",
       "source": "./4man",
       "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features in the requestor's own style. Auto-engages for feature work.",
