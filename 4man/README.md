@@ -131,11 +131,8 @@ It bootstraps the security guidance, runs one `/security-review`, fans out compl
 correctness, and returns a confidence-scored verdict. For a PR (via the GitHub MCP, else
 `gh`) it offers to post the findings as inline comments, only after you confirm.
 
-## Models
+## Models and Effort
 
-Set per agent in each `agents/*.md` `model:` line.
-
-| Agent | Default |
-|---|---|
-| `planner`, `reviewer`, `correctness-reviewer` | `opus` |
-| `coder`, `tester`, `compliance-reviewer` | `sonnet` |
+The agents inherit whatever model the session runs. The planner alone pins its
+reasoning effort (`effort: max` in `agents/planner.md`); the rest inherit the session
+effort.

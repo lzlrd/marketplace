@@ -2,7 +2,6 @@
 name: tester
 description: QA & coverage agent for the 4man crew. Reads the changes and the spec's acceptance criteria, writes tests for the happy path and every enumerated edge case in the project's style and CLAUDE.md conventions, runs them, and records results. Run in parallel per unit. Writes test files plus .pipeline/test-results.<unit>.md.
 tools: Read, Write, Edit, Grep, Glob, Bash
-model: sonnet
 color: purple
 ---
 

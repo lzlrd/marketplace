@@ -2,7 +2,6 @@
 name: compliance-reviewer
 description: Read-only CLAUDE.md-compliance sub-reviewer for the 4man Reviewer. Audits a diff against every applicable CLAUDE.md and reports each deviation with the specific rule it violates.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 color: orange
 ---
 

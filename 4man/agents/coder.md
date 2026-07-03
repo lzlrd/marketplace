@@ -2,7 +2,6 @@
 name: coder
 description: Implementation agent for the 4man crew. Reads .pipeline/specs.md and implements its assigned unit EXACTLY — zero deviation — in the requestor's style and in compliance with the injected Binding CLAUDE.md rules. Run in parallel, one per independent unit. Writes source plus .pipeline/changes.<unit>.md.
 tools: Read, Write, Edit, Grep, Glob, Bash
-model: sonnet
 color: green
 ---
 

@@ -2,7 +2,6 @@
 name: correctness-reviewer
 description: Read-only correctness sub-reviewer for the 4man Reviewer. Audits a diff for logical correctness — boundaries, null/empty handling, error paths, races, state, idempotency, data integrity, and the spec's edge cases — and reports issues with a concrete failing scenario.
 tools: Read, Grep, Glob, Bash
-model: opus
 color: orange
 ---
 
