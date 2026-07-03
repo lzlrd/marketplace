@@ -1,6 +1,6 @@
 {
   "name": "offshore",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Run a local abliterated model to answer prompts Claude refuses. Bundles the offshore MCP server (ask_abliterated, list_models, list_providers).",
   "author": {
     "name": "Diab Neiroukh",
@@ -12,8 +12,8 @@
   "keywords": ["mcp", "abliterated", "uncensored", "ollama", "local-llm"],
   "mcpServers": {
     "offshore": {
-      "command": "bun",
-      "args": ["--cwd", "${CLAUDE_PLUGIN_ROOT}", "src/index.ts"]
+      "command": "sh",
+      "args": ["-c", "cd \"${CLAUDE_PLUGIN_ROOT}\" && bun install --frozen-lockfile 1>&2 && exec bun src/index.ts"]
     }
   }
 }
