@@ -1,6 +1,6 @@
 {
   "name": "realfavicon-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Generate, check, and track favicons via RealFaviconGenerator. Bundles the realfavicon-mcp MCP server (realfavicon_generate, realfavicon_check, realfavicon_changelog).",
   "author": {
     "name": "Diab Neiroukh",

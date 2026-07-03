@@ -39,7 +39,7 @@ export function registerChangelog(server: McpServer): void {
         u.searchParams.set('format', format);
         if (since) u.searchParams.set('since', since);
 
-        const res = await fetch(u);
+        const res = await fetch(u, { signal: AbortSignal.timeout(30_000) });
         if (!res.ok) throw new Error(`change-log request failed (${res.status})`);
 
         const changes = await res.json();

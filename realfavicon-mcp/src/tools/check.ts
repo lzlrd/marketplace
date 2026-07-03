@@ -75,7 +75,8 @@ export function registerCheckFavicon(server: McpServer): void {
     },
     async ({ url, include_icon_data }) => {
       try {
-        const res = await fetch(url);
+        if (!/^https?:\/\//i.test(url)) throw new Error(`refusing non-http(s) URL: ${url}`);
+        const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
         if (!res.ok) throw new Error(`failed to fetch ${url} (${res.status})`);
         const html = await res.text();
         const head = parse(html).querySelector('head');

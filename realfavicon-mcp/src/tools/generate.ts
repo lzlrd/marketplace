@@ -34,7 +34,7 @@ const outputSchema = {
 
 // Downloads a URL to a temp file and returns the path. Caller must unlink it.
 async function downloadToTemp(url: string): Promise<string> {
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`failed to download source (${res.status})`);
   const tmp = join(tmpdir(), `rfg-src-${randomUUID()}`);
   await writeFile(tmp, Buffer.from(await res.arrayBuffer()));
