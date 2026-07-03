@@ -3,6 +3,7 @@ name: planner
 description: Spec writer for the 4man crew. Turns a vague feature request into a precise, implementable spec — exact files, function signatures, data model/migrations, edge cases, acceptance criteria — structured so independent parts can be coded in parallel. First stage of the crew. Read-only on source; writes only .pipeline/specs.md.
 tools: Read, Grep, Glob, Bash
 model: opus
+effort: max
 color: blue
 ---
 
