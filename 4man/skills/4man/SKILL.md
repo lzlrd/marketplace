@@ -83,7 +83,34 @@ coordination. Apply all of the following when spawning any worker.
 - **Run continuously.** Once engaged and pre-flighted, don't stop to check in between
   stages — drive the pipeline through to the verdict. Stop only for a BLOCKED you can't
   resolve, genuine outcome-changing ambiguity, or completion. "Should I continue?"
-  prompts waste the human's time; they asked for the feature, so build it.
+  prompts waste the human's time; they asked for the feature, so build it. If the human
+  messages mid-run, handle it per **Steering** below — draining an inbox at boundaries,
+  not stopping to ask.
+
+## Steering (mid-run interjections)
+The crew runs continuously, but you can steer it mid-run without aborting — and you never
+hand-edit files to do it. Just **message the orchestrator**; Claude Code queues the message
+and delivers it at the next turn, which falls between dispatches. Triage every mid-run
+message:
+- **A steer** ("use Postgres, not SQLite"; "make the tests table-driven"; "drop unit C") →
+  **append it to `.pipeline/interject.md`** (create it on the first steer), then drain it
+  (below). Writing it down is what lets it survive compaction and be applied exactly once —
+  the same reason every other `.pipeline/` file exists.
+- **A question** ("how's it going?", "which units are left?") → answer inline; write nothing.
+- **A hard stop** ("stop", "abort") → halt. That's an Esc-level interrupt, not a checkpoint.
+
+**Drain at each stage boundary** — after Plan (Step 2), Code (Step 3), Test (Step 4), and
+before Review (Step 5). For each unconsumed steer: **fold it forward** into the next stage's
+dispatch briefs, or, if it invalidates already-finished work, **loop the affected unit's
+Coder/Tester back** with it. Then mark it consumed (a `> applied @ <stage>` line, or move it
+to a `## Processed` section) so a post-compaction resume never re-applies it.
+- **A steer is live human intent — it wins over the frozen `specs.md`.** If it changes the
+  plan, update `specs.md` to match and say so.
+- **A steer-driven re-run is not a failure** — don't charge it to the per-unit 2-retry budget
+  (Step 4.3).
+- **Applied at the next boundary, not mid-agent.** In-flight workers finish first; the finest
+  granularity is one stage. This refines "Run continuously": you still don't stop and wait,
+  you just drain the inbox at boundaries you already reach.
 
 ## Step 0 — Repo hygiene & working mode (do this FIRST)
 1. **Gitignore first.** If the repo has no `.gitignore`, create one containing
@@ -115,7 +142,7 @@ coordination. Apply all of the following when spawning any worker.
 4. Create `.pipeline/`. If `templates/pipeline-readme.md` exists in the plugin
    (`${CLAUDE_PLUGIN_ROOT}/templates/pipeline-readme.md`), copy it to
    `.pipeline/README.md`. Remove stale `specs.md`, `changes*.md`,
-   `test-results*.md`, `verdict.md` from a prior run.
+   `test-results*.md`, `verdict.md`, `interject.md` from a prior run.
 
 ## Step 1 — Context the crew writes from
 Prepare three text blocks here, in the **orchestrator** (which has MCP + full
@@ -265,3 +292,6 @@ Lead with the decision and where the work landed.
   end in a PR against the default branch (create `4man/<slug>` only when you're on the
   default branch). Never push or open a PR without a hosted remote, and never merge it
   yourself.
+- Human steers arrive as chat messages, not file edits: the orchestrator logs each to
+  `.pipeline/interject.md` and drains it at a stage boundary — applied next boundary, never
+  mid-agent.

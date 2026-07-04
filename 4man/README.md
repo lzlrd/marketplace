@@ -60,6 +60,7 @@ file, writes one file:
 | `changes.<unit>.md` → `changes.md` | Coders | Testers, Reviewer |
 | `test-results.<unit>.md` → `test-results.md` | Testers | Reviewer |
 | `verdict.md` | orchestrator | you |
+| `interject.md` | orchestrator (from your messages) | orchestrator |
 
 `.pipeline/` is gitignored on the first action of every run, so it never lands in a
 commit. It doubles as a ledger: it survives compaction, so the crew resumes from it
@@ -92,6 +93,17 @@ Testers find the root cause before touching anything: read the error, reproduce,
 the bad value to its source, weigh competing hypotheses, then fix a test defect or report
 an implementation defect with the smallest failing input. They never loosen an assertion
 to force a pass.
+
+## Steering
+
+The crew runs to the verdict without stopping to ask — but you can steer it mid-run without
+aborting. Just message the orchestrator (Claude Code queues it and delivers it at the next
+stage boundary). A steer — "use Postgres, not SQLite", "make the tests table-driven", "drop
+unit C" — is logged to `.pipeline/interject.md` and applied at the next boundary: folded into
+the next stage, or looped back to re-do the unit it invalidates. A question is answered
+inline; "stop" is an Esc-level halt. Because it lands at the next boundary and never
+mid-agent — in-flight workers finish first — it's cooperative checkpointing, not a hard
+interrupt.
 
 ## Security
 

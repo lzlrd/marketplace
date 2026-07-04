@@ -5,3 +5,4 @@ Handoff bus between the crew. Regenerated each run.
 - `changes.<unit>.md` → merged into `changes.md` — Coders → Testers
 - `test-results.<unit>.md` → merged into `test-results.md` — Testers → Reviewer
 - `verdict.md`          — written by the orchestrator from the Reviewer's verdict
+- `interject.md`        — your mid-run steers, logged by the orchestrator and drained at stage boundaries
