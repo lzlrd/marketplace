@@ -40,6 +40,12 @@
       "category": "productivity"
     },
     {
+      "name": "prompt-engineering",
+      "source": "./prompt-engineering",
+      "description": "Turn a description into an optimized, ready-to-paste LLM prompt for a Gemini Gem, Claude Project, or custom GPT, grounded in the promptingguide.ai guide. Works offline via a bundled distilled reference. Auto-engages when you write or refine a prompt.",
+      "category": "workflow"
+    },
+    {
       "name": "fableplan",
       "source": "./fableplan/plugins/fableplan",
       "description": "Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup for Claude Code. Tracked as a submodule of the lzlrd/fableplan fork.",

@@ -4,7 +4,7 @@ Repo-wide security policy for the `lzlrd` marketplace and the plugins it ships. 
 
 ## Scope
 
-The marketplace vendors five plugins as source (`mempalace-hooks`, `system-design`, `4man`, `realfavicon-mcp`, `offshore`) and tracks `fableplan` as a submodule. Three of them carry a real security surface: two MCP servers that run code on Bun (`realfavicon-mcp`, `offshore`) and one plugin that registers shell hooks (`mempalace-hooks`). The rest are skills and agent definitions with no runtime of their own. The sections below cover the parts that matter.
+The marketplace vendors six plugins as source (`mempalace-hooks`, `system-design`, `4man`, `realfavicon-mcp`, `offshore`, `prompt-engineering`) and tracks `fableplan` as a submodule. Three of them carry a real security surface: two MCP servers that run code on Bun (`realfavicon-mcp`, `offshore`) and one plugin that registers shell hooks (`mempalace-hooks`). The rest are skills and agent definitions with no runtime of their own. The sections below cover the parts that matter.
 
 ## realfavicon-mcp
 

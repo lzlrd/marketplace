@@ -1,0 +1,10 @@
+{
+  "name": "prompt-engineering",
+  "version": "0.1.0",
+  "description": "Turn a plain-language description into an optimized, concise LLM prompt, ready to paste into a Gemini Gem, Claude Project, or custom GPT, or to refine an existing one. Grounded in the promptingguide.ai prompt-engineering guide (elements of a prompt, role prompting, delimiters, few-shot, chain-of-thought, structured output), with a bundled distilled reference so it works fully offline and the NotebookLM MCP used for live source material when connected. Returns only the finished prompt. Auto-engages via the 'prompt-engineering' skill whenever you write, generate, optimize, or refine a prompt or system prompt; slash-available as /prompt-engineering:prompt-engineering.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/prompt-engineering",
+  "repository": "https://github.com/lzlrd/marketplace",
+  "keywords": ["prompt-engineering", "prompts", "llm", "gemini-gems", "system-prompt", "few-shot", "chain-of-thought", "meta-prompt"]
+}
