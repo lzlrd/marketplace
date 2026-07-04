@@ -49,15 +49,14 @@ coordination. Apply all of the following when spawning any worker.
   resume, trust the `.pipeline/` files + `git log` over memory; do not re-dispatch a
   unit already recorded done (re-running completed work is the most expensive failure
   mode there is).
-- **Set each worker's model deliberately — and always set it explicitly.** An omitted
-  model silently inherits your (expensive) session model. Pick the *least* powerful
-  model that can do the job: cheapest tier for transcription and single-file mechanical
-  units (the spec already contains the code to write); a mid-tier model as the **floor**
-  for anything worked from prose, and for reviewers. Raise to the most capable for
-  genuine design judgement or broad-codebase reasoning, and dispatch the **final review
-  on the most capable model**, never the session default. Turn-count beats token price:
-  the cheapest models often take 2–3× the turns on multi-step work and cost more overall
-  — don't send them after judgement.
+- **Don't pin worker models or effort — let them inherit the session.** Every agent's
+  frontmatter already inherits (an omitted `model:` resolves to the session model on
+  current Claude Code), so spawn each worker **without** a `model` override: a
+  per-invocation model outranks the frontmatter and would pin the crew to a fixed tier.
+  The whole crew runs on whatever model the requestor is using — Coder, Tester, and the
+  full review fan-out alike. Reasoning effort inherits the same way (the planner's
+  `effort: max` frontmatter aside) — don't override it either. The one exception is
+  recovery: a **BLOCKED** unit may be re-dispatched on a more capable model (below).
 - **Handle worker status — never blindly retry.** Workers report one of four:
   - **DONE** → proceed to the next stage (test / review).
   - **DONE_WITH_CONCERNS** → read the concerns first. Correctness/scope doubts: resolve
