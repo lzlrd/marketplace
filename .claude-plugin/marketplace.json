@@ -46,6 +46,12 @@
       "category": "workflow"
     },
     {
+      "name": "also",
+      "source": "./also",
+      "description": "The action-counterpart to Claude Code's built-in /btw: dispatch a side task to a separate fork sub-agent that inherits the session's power level — reasoning effort (incl. max/xhigh), ultracode, and model — plus full context and full tools, so a tangential job gets done without derailing the main one. User-invoked as /also <task>.",
+      "category": "productivity"
+    },
+    {
       "name": "fableplan",
       "source": "./fableplan/plugins/fableplan",
       "description": "Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup for Claude Code. Tracked as a submodule of the lzlrd/fableplan fork.",
