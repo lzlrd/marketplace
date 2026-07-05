@@ -1,8 +1,8 @@
 {
   "name": "mempalace-hooks",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "PolyForm-Noncommercial-1.0.0",
-  "description": "Wires the mempalace MCP memory server into Claude Code: directive hooks that load palace context at session start, pull the user's writing/coding voice before writing or coding, and keep a per-day session diary — falling back to the mempalace CLI when the MCP isn't connected, with no auto-mining and one source of truth.",
+  "description": "Wires the mempalace memory server into Claude Code: directive hooks that load palace context, pull your writing/coding voice, and auto-nudge a per-day session diary; a match-style skill that pulls your MemPalace conventions before you write; and a mempalace-CLI fallback when the MCP isn't connected.",
   "author": { "name": "Diab Neiroukh", "url": "https://ayoo.by" },
-  "keywords": ["memory", "mempalace", "context", "hooks", "style", "mcp", "diary", "remember", "cli"]
+  "keywords": ["memory", "mempalace", "context", "hooks", "style", "mcp", "diary", "remember", "cli", "humanizer"]
 }
