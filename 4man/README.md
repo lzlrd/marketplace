@@ -129,7 +129,8 @@ Step 0.5. **security-guidance** (from `claude-plugins-official`) is the
 | `security-guidance` / `claude-security-guidance.md` | convention (security-guidance) | the committed security policy the review bootstraps | 4man writes a starter policy itself |
 | `/security-review` | built-in command | the single security pass in review | Reviewer does a focused manual pass |
 | `/prompt-engineering:prompt-engineering` | skill (this marketplace) | optionally sharpen dispatch briefs | briefs sent as-is |
-| `mempalace` MCP (or `mempalace` CLI) | memory | off-disk style profile + dev preferences | derived from your human-authored commits |
+| `/humanizer:humanizer` | skill (this marketplace) | de-AI crew-authored prose (commit messages, PR body, docs) | prose committed as written |
+| `mempalace` MCP (or `mempalace` CLI) | memory | off-disk style profile (`coding-style`/`writing-voice`) + `working-prefs` | derived from your human-authored commits |
 | GitHub MCP (or `gh` / `glab`) | VCS host | opening the PR in hosted mode | falls back to `gh`, then a compare URL |
 
 ## The Reviewer
