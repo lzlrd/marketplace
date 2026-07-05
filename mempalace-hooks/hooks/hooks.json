@@ -25,6 +25,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/mp-diary-capture.sh",
+            "timeout": 10,
+            "statusMessage": "mempalace diary…"
+          }
+        ]
+      }
     ]
   }
 }
