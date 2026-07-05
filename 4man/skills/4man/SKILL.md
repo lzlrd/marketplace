@@ -85,6 +85,13 @@ coordination. Apply all of the following when spawning any worker.
   prompts waste the human's time; they asked for the feature, so build it. If the human
   messages mid-run, handle it per **Steering** below — draining an inbox at boundaries,
   not stopping to ask.
+- **Sharpen briefs with prompt-engineering when available (optional).** If the
+  `prompt-engineering` plugin is installed, you may pass a producing agent's dispatch
+  brief (Planner/Coder/Tester) or a reviewer attention-lens through
+  `/prompt-engineering:prompt-engineering` to tighten it before sending — worth it for a
+  gnarly spec unit or a subtle review focus, not for routine dispatches. It's an optional
+  polish, never a required step: the briefs already carry the injected blocks and the
+  rubric. Skip it entirely when the plugin isn't installed (never block on it).
 
 ## Steering (mid-run interjections)
 The crew runs continuously, but you can steer it mid-run without aborting — and you never
@@ -143,6 +150,14 @@ to a `## Processed` section) so a post-compaction resume never re-applies it.
    `.pipeline/README.md`. Remove stale `specs.md`, `changes*.md`,
    `test-results*.md`, `verdict.md`, `interject.md` from a prior run.
 
+## Step 0.5 — New or first-touch project (optional, if available)
+If this is a new codebase (you're scaffolding it) or 4man's first run in this repo — no
+prior `4man/` commits, no existing `.pipeline/` ledger — and the `claude-code-setup`
+plugin is installed, offer to run **`/claude-code-setup:claude-automation-recommender`**
+once to recommend project automations (hooks, settings, CLAUDE.md) worth adding. It's a
+recommendation pass, not a gate: surface its suggestions and let the user choose. Skip
+silently if the plugin isn't installed or the repo is already established.
+
 ## Step 1 — Context the crew writes from
 Prepare three text blocks here, in the **orchestrator** (which has MCP + full
 CLAUDE.md access that plugin subagents lack), and paste them into the prompt of every
@@ -155,8 +170,9 @@ the repo, including .pipeline/ or CLAUDE.md.**
 1. **Identity** (from `.gitconfig`): `git config user.name` and `git config user.email`.
 2. **Workspace key**: `git config --get remote.origin.url` if set, else the repo's
    absolute path. Combine with the author email to key the profile.
-3. **Retrieve** from the **mempalace MCP if connected**: a stored style profile for
-   this workspace key. If found, use it.
+3. **Retrieve** the stored style profile for this workspace key: from the **mempalace
+   MCP if connected**; else, if the `mempalace` CLI is installed, `mempalace search` /
+   `mempalace wake-up` for it. If found, use it.
 4. **First-run derivation** (no profile found, or mempalace absent): build from the
    requestor's **human-authored commits only**:
    - List candidates: `git log --no-merges --pretty=format:'%H%x1f%an%x1f%ae%x1f%B%x1e'`
@@ -284,8 +300,8 @@ Lead with the decision and where the work landed.
 - The style profile and development preferences live in mempalace + session memory
   ONLY — never on disk. (`claude-security-guidance.md` is different: a committed project
   security policy.)
-- Security is one `/security-review`, run by you, with `claude-security-guidance.md`
-  bootstrapped first.
+- Security is one `/security-review` when available (else a focused manual pass by the
+  Reviewer), run by you, with `claude-security-guidance.md` bootstrapped first.
 - Parallelize disjoint work; serialize shared-file work and migrations.
 - Branch hand-off: no hosted remote → work on the current branch in place; hosted remote →
   end in a PR against the default branch (create `4man/<slug>` only when you're on the

@@ -113,6 +113,25 @@ codebase-specific file), then runs `/security-review` once on the diff and hands
 findings to the Reviewer. If `/security-review` is unavailable, the Reviewer does a
 focused manual pass.
 
+## Companion plugins & integrations
+
+4man works standalone; these make it better when present — each is optional, and 4man
+degrades gracefully without it.
+
+Two are worth installing. **claude-code-setup** (from `claude-plugins-official`) supplies
+`/claude-code-setup:claude-automation-recommender`, the new-project recommendation pass in
+Step 0.5. **security-guidance** (from `claude-plugins-official`) is the
+`claude-security-guidance.md` convention the review bootstraps before `/security-review`.
+
+| Integration | Kind | Used for | Without it |
+|---|---|---|---|
+| `/claude-code-setup:claude-automation-recommender` | skill (claude-code-setup) | new-project automation recommendations | skipped silently |
+| `security-guidance` / `claude-security-guidance.md` | convention (security-guidance) | the committed security policy the review bootstraps | 4man writes a starter policy itself |
+| `/security-review` | built-in command | the single security pass in review | Reviewer does a focused manual pass |
+| `/prompt-engineering:prompt-engineering` | skill (this marketplace) | optionally sharpen dispatch briefs | briefs sent as-is |
+| `mempalace` MCP (or `mempalace` CLI) | memory | off-disk style profile + dev preferences | derived from your human-authored commits |
+| GitHub MCP (or `gh` / `glab`) | VCS host | opening the PR in hosted mode | falls back to `gh`, then a compare URL |
+
 ## The Reviewer
 
 Read-only: no Write/Edit on any reviewer, enforced by their tool lists. The lead Reviewer
