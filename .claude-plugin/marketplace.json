@@ -56,6 +56,12 @@
       "source": "./fableplan/plugins/fableplan",
       "description": "Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup for Claude Code. Tracked as a submodule of the lzlrd/fableplan fork.",
       "category": "workflow"
+    },
+    {
+      "name": "reload-claude-md",
+      "source": "./reload-claude-md",
+      "description": "A /reload-claude-md command that re-reads the in-effect CLAUDE.md memory files from disk and re-anchors the session to their current content, so mid-session edits take effect without a restart. Claude Code loads CLAUDE.md only at session start and has no native reload; this fills that gap. Read-only and user-invoked.",
+      "category": "productivity"
     }
   ]
 }
