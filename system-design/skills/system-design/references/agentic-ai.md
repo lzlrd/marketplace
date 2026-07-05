@@ -1,4 +1,4 @@
-# Designing AI Agent Systems (AWS · Azure · Google Cloud)
+# Designing AI Agent Systems (AWS · Azure · Google Cloud · Cloudflare)
 
 Read when the design involves an LLM-powered **agent** — something that reasons, calls tools, holds
 conversation state, and acts — rather than a single model call. A one-shot "summarize this text"
@@ -11,14 +11,16 @@ agent-specific components and decisions on top of that loop.
 
 ## When it's an "agent" (and when it isn't)
 
-- **Single model call** (classify, summarize, extract, translate) → the managed model API (Bedrock · Foundry Models · Vertex AI). Stateless, simple, done. Don't over-build.
-- **RAG** (answer grounded in your data) → model + a **retrieval store** (S3 Vectors/OpenSearch · AI Search · Vertex AI Search/pgvector). Still mostly a request/response system.
+- **Single model call** (classify, summarize, extract, translate) → the managed model API (Bedrock · Foundry Models · Vertex AI · Workers AI, or AI Gateway in front of any provider). Stateless, simple, done. Don't over-build.
+- **RAG** (answer grounded in your data) → model + a **retrieval store** (S3 Vectors/OpenSearch · AI Search · Vertex AI Search/pgvector · Cloudflare Vectorize or Cloudflare AI Search). Still mostly a request/response system.
 - **Agent** (plans, chooses and calls tools, remembers across turns, may run for a while or call other agents) → the platforms below. This is where you get cold starts, state, identity, tool governance, and observability as real concerns.
 
 ## The agent concerns — and each cloud's answer
 
-Every platform decomposes the same way; only the names differ. Map each concern, then read the
-target platform's docs for current APIs (all three are fast-moving — verify before committing).
+Every hyperscaler platform decomposes the same way; only the names differ. Map each concern, then
+read the target platform's docs for current APIs (all are fast-moving — verify before committing).
+Cloudflare decomposes differently — primitives, not a packaged service — and gets its own section
+after the table.
 
 | Concern | AWS Bedrock AgentCore | Azure: Foundry Agent Service | GCP: Agent Engine (Vertex AI / Gemini Enterprise Agent Platform) |
 |---|---|---|---|
@@ -43,6 +45,28 @@ flux (2026): Azure's stack is now **Microsoft Foundry**; Google's is being rebra
 Enterprise Agent Platform** — verify current names/regions/APIs against vendor docs before
 committing a design.
 
+## Cloudflare: agents built on primitives, not a managed agent service
+
+Cloudflare's answer is the **Agents SDK** (`agents` package), but the shape differs: where the three
+hyperscalers sell a *managed agent service* (runtime + gateway + memory + registry + evaluations as
+products), Cloudflare hands you **primitives and an SDK** and you compose the agent yourself — less
+turnkey governance, but near-zero cold starts and per-session state for free. Map the same concerns
+onto the primitives:
+
+- **Run/scale + memory/state** — each agent instance is a **Durable Object**: single-threaded, strongly consistent, with colocated SQLite for per-session memory and WebSocket hibernation for long-lived connections. Session isolation and state are the default, not an add-on.
+- **Expose tools** — the SDK's **`MCPAgent`** hosts MCP servers directly on Workers; tools are plain Workers/bindings or any HTTP/MCP endpoint. No managed tool gateway — you wire and authorize tools yourself (service bindings keep it credential-free).
+- **Model access** — **Workers AI** for edge inference, or **AI Gateway** in front of any provider (OpenAI, Anthropic, Workers AI) for caching, rate limiting, fallback, cost analytics, and Guardrails.
+- **Ground in your data** — **Vectorize** (vectors) or **AI Search** (managed RAG over an R2 bucket).
+- **Identity & credentials** — scoped API tokens and **service bindings**; front the agent's own endpoint with **Cloudflare Access** (ZTNA) when it's internal.
+- **Schedule & durability** — the SDK's `this.schedule` plus **Workflows** give long-running, retryable, human-in-the-loop execution; **Queues** for async tool work.
+- **Observe & govern** — **Workers Observability** + **AI Gateway** analytics/logs. There is **no managed agent registry or built-in evaluator suite** — bring your own evaluation and cataloging.
+
+Decision: Cloudflare fits agents that are **request/session-shaped, latency-sensitive, and globally
+distributed** — chat and tool-using web agents especially, where a Durable Object per session is a
+natural home for state. Reach for a hyperscaler's managed agent service when you need packaged
+governance (agent registry, built-in evaluators, org-wide policy) or the agent must sit next to data
+and models that already live there.
+
 ## Design decisions specific to agents
 
 - **Runtime lifecycle — per-request vs per-session.** Per-request is stateless and simplest; per-session keeps a warm context across a conversation (lower latency, holds state) at the cost of session affinity. Choose by whether turns depend on each other.
@@ -63,6 +87,6 @@ The pillars still apply, with agent-specific emphasis:
 - **Operational Excellence** — trace every run, evaluate quality continuously, catalog and govern centrally.
 
 AgentCore material adapted from the MIT-licensed `aws-agentic-ai` skill in zxkane/aws-skills (see
-SKILL.md "Sources & attribution"); Azure/GCP platform mappings verified against vendor docs and
-announcements, July 2026. All three platforms ship features monthly — treat the table as the map,
-not the territory.
+SKILL.md "Sources & attribution"); Azure/GCP/Cloudflare platform mappings verified against vendor
+docs and announcements, July 2026. All four platforms ship features monthly — treat the table as the
+map, not the territory.

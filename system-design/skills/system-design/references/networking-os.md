@@ -35,7 +35,9 @@ Routing policies (latency, geo, weighted, failover, multivalue) let DNS steer us
 or healthiest region — the basis of canary rollouts, active-passive DR, and global apps:
 → Route 53 policies · Traffic Manager (Azure DNS hosts zones; Traffic Manager does the routing) ·
 Cloud DNS routing policies. GCP often skips DNS steering entirely — its global anycast L7 load
-balancer routes to the nearest healthy region on one IP.
+balancer routes to the nearest healthy region on one IP. **Cloudflare goes furthest here:** every
+hostname is anycast from all POPs, so steering and failover happen on the network rather than via DNS
+TTLs — Load Balancing adds health-checked origin steering on top.
 
 Health checks drive failover; DNS-level failover is bounded below by TTL, so it's coarse — pair
 with in-region load-balancer health checks for fast local failover.
@@ -43,12 +45,15 @@ with in-region load-balancer health checks for fast local failover.
 ## Load balancing: L4 vs L7
 
 - **L4:** routes on IP/port without inspecting payload. Ultra-low latency, millions of connections,
-  static IP, preserves source IP, any TCP/UDP protocol. → NLB · Azure Load Balancer · Network LB.
+  static IP, preserves source IP, any TCP/UDP protocol. → NLB · Azure Load Balancer · Network LB ·
+  Cloudflare Spectrum.
 - **L7:** inspects HTTP — routes on path/host/header, terminates TLS, WebSockets, redirects, WAF
-  integration. → ALB · Application Gateway (regional) / Front Door (global) · Application LB.
+  integration. → ALB · Application Gateway (regional) / Front Door (global) · Application LB ·
+  Cloudflare Load Balancing + Workers.
 - **Anycast:** one IP advertised from many locations; the network routes to the nearest — global
   entry without DNS-TTL failover lag. → Global Accelerator · Front Door · GCP's global external
-  Application LB (anycast is its default mode).
+  Application LB (anycast is its default mode) · Cloudflare (the *entire* network is anycast — Workers,
+  DNS, Load Balancing, and Spectrum all answer from the nearest POP).
 
 ## IP, NAT, subnets, and the virtual network
 
@@ -62,12 +67,15 @@ with in-region load-balancer health checks for fast local failover.
 - **Network scope differs by cloud — a real design difference:** AWS VPCs and Azure VNets are
   **regional** (subnets per-AZ/regional; cross-region needs peering or hub-and-spoke). A GCP VPC is
   **global** with regional subnets — cross-region private traffic needs no peering. Multi-region
-  designs are cheaper to wire on GCP and need explicit topology work on AWS/Azure.
+  designs are cheaper to wire on GCP and need explicit topology work on AWS/Azure. **Cloudflare has no
+  VPC or subnets at all** — compute and data are global by construction; you reach private origins
+  through Cloudflare Tunnel or Workers VPC rather than laying out address space.
 - **BGP** routes between Autonomous Systems on the public internet; **anycast** (same IP from many
   places) is how CDNs/DNS get you to the nearest POP.
 - **Private service connectivity** (no internet transit to reach PaaS): PrivateLink · Private
-  Link/Private Endpoint · Private Service Connect. On-prem links: Direct Connect · ExpressRoute ·
-  Cloud Interconnect (+ VPN on each).
+  Link/Private Endpoint · Private Service Connect · Cloudflare Tunnel / Workers VPC (outbound-only, no
+  open ports). On-prem / network links: Direct Connect · ExpressRoute · Cloud Interconnect (+ VPN on
+  each); Magic Transit / Cloudflare WAN for network-layer interconnect.
 
 ## Sockets, ports, and connection limits
 
@@ -89,7 +97,8 @@ the edge** (CDN/global LB) to amortize the handshake near the user and offload o
 whether the internal hop is re-encrypted (end-to-end) or plaintext within the private network
 (cheaper, relies on network isolation — some compliance regimes forbid it). SNI lets one IP serve
 many certs; every cloud has managed cert issuance/rotation (ACM · Key Vault certificates / Front
-Door managed certs · Certificate Manager).
+Door managed certs · Certificate Manager · Cloudflare SSL/TLS, where edge termination is the default
+model).
 
 ## OS / kernel knobs that affect a design
 

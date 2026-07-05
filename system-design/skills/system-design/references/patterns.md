@@ -2,8 +2,10 @@
 
 The building blocks for step 3 (sketch the architecture). For each: what it is, when to reach for
 it, the catch, and the service that provides it on each cloud (**AWS · Azure · GCP**, in that order
-throughout). Pick the fewest patterns that meet the requirements — each one is also a source of
-complexity and failure.
+throughout). **Cloudflare** is called out (`· Cloudflare: …`) only where the pattern is edge-native:
+it's an edge-first platform, not a symmetric hyperscaler, so it deliberately doesn't appear on
+patterns it has no play in (VM/OLTP sharding, relational replication topologies). Pick the fewest
+patterns that meet the requirements — each one is also a source of complexity and failure.
 
 **Contents:** Scaling · Load balancing · Caching · Partitioning & sharding · Replication & failover ·
 Messaging (queues vs pub/sub) · API gateway · CDN / edge · Microservices vs monolith · Serverless ·
@@ -15,7 +17,7 @@ building blocks · Serverless anti-patterns.
 
 - **Vertical (scale up):** bigger instance (more CPU/RAM). Simple, no app changes, but a hard ceiling and often downtime to resize. Fine early, or for stateful single-node stores.
 - **Horizontal (scale out):** more instances behind a load balancer. Near-unbounded and fault-tolerant, but requires statelessness (or externalized state) and load balancing. Every vendor's Well-Architected default for availability.
-- **Rule:** scale up until it's expensive or hits a ceiling, then scale out. Make compute **stateless** early so scaling out stays cheap — push session/state to a cache or KV store (ElastiCache/DynamoDB · Managed Redis/Cosmos DB · Memorystore/Firestore).
+- **Rule:** scale up until it's expensive or hits a ceiling, then scale out. Make compute **stateless** early so scaling out stays cheap — push session/state to a cache or KV store (ElastiCache/DynamoDB · Managed Redis/Cosmos DB · Memorystore/Firestore · Workers KV / Durable Objects).
 
 ## Load balancing
 
@@ -23,9 +25,10 @@ Distributes traffic across instances; provides health checks and failover. Layer
 (path/host); Layer 4 routes on TCP/UDP with lower latency. Algorithms: round-robin, least
 connections, hashing. **Stateless backends** make this trivial; if you need stickiness, prefer an
 external session store over sticky sessions.
-→ L7: ALB · Application Gateway (regional) / Front Door (global) · global external Application LB.
-L4: NLB · Load Balancer · Network LB. DNS-level/global routing: Route 53 · Traffic Manager · Cloud
-DNS policies (GCP usually doesn't need it — the L7 LB is already global anycast).
+→ L7: ALB · Application Gateway (regional) / Front Door (global) · global external Application LB ·
+Cloudflare Load Balancing + Workers. L4: NLB · Load Balancer · Network LB · Cloudflare Spectrum.
+DNS-level/global routing: Route 53 · Traffic Manager · Cloud DNS policies (GCP usually doesn't need
+it — the L7 LB is already global anycast; Cloudflare even more so — everything is anycast).
 
 ## Caching
 
@@ -34,7 +37,8 @@ Store hot data in fast memory to cut latency and offload the backend.
 - **The hard parts:** invalidation (stale data) and consistency. Set TTLs; invalidate on write; accept bounded staleness where you can.
 - **Where:** client → CDN (edge) → app-tier cache → DB-embedded cache. Cache at the layer closest to the reader that tolerates the staleness.
 → App tier: ElastiCache (+ DAX for DynamoDB) · Azure Managed Redis · Memorystore. Edge: CloudFront ·
-Front Door · Cloud CDN.
+Front Door · Cloud CDN · Cloudflare Cache API / Tiered Cache (+ Workers KV for read-mostly data at
+the edge).
 
 ## Partitioning & sharding
 
@@ -62,9 +66,9 @@ strongly consistent), Firestore multi-region.
 ## Messaging: queues vs pub/sub
 
 Asynchronous, decoupled communication — the backbone of resilient systems.
-- **Queue (point-to-point):** one message → one consumer; decouples producer/consumer speed, smooths bursts, enables retries. Add a **dead-letter queue** for poison messages. → SQS · Service Bus · Pub/Sub (or Cloud Tasks for rate-controlled dispatch).
-- **Pub/sub (fan-out):** one message → many subscribers. → SNS / EventBridge · Event Grid · Pub/Sub.
-- **Stream (log):** ordered, replayable, retained for multiple independent consumers. → Kinesis / MSK · Event Hubs (Kafka-compatible) · Pub/Sub (retention + seek) / Managed Kafka.
+- **Queue (point-to-point):** one message → one consumer; decouples producer/consumer speed, smooths bursts, enables retries. Add a **dead-letter queue** for poison messages. → SQS · Service Bus · Pub/Sub (or Cloud Tasks for rate-controlled dispatch) · Cloudflare Queues.
+- **Pub/sub (fan-out):** one message → many subscribers. → SNS / EventBridge · Event Grid · Pub/Sub. (Cloudflare has no managed bus — fan out with a Worker to several Queues, or a Durable Object broadcasting to subscribers.)
+- **Stream (log):** ordered, replayable, retained for multiple independent consumers. → Kinesis / MSK · Event Hubs (Kafka-compatible) · Pub/Sub (retention + seek) / Managed Kafka · Cloudflare Pipelines (ingest → R2, query with R2 SQL).
 - **Queue vs stream:** a queue *deletes* on consume; a stream *retains* for replay. Need replay or multiple consumers reading at their own pace → stream. Just decoupling work → queue. (On GCP, Pub/Sub covers both — it's a subscription-configuration choice, not a service choice.)
 
 ## API gateway
@@ -78,7 +82,8 @@ Management · API Gateway / Apigee — or plain L7 LB when you need none of the 
 Cache and serve content from POPs close to users — cuts latency, offloads origin, absorbs spikes,
 terminates TLS, anchors WAF. Essential for static assets and global audiences; can cache dynamic
 content with short TTLs. → CloudFront (edge code: Lambda@Edge / CloudFront Functions) · Front Door
-(rules engine — config, not arbitrary code) · Cloud CDN (Service Extensions for edge logic).
+(rules engine — config, not arbitrary code) · Cloud CDN (Service Extensions for edge logic) ·
+Cloudflare CDN + Workers (arbitrary code at every POP — here the edge *is* the compute tier).
 
 ## Microservices vs monolith
 
@@ -98,7 +103,8 @@ glue code, and getting to market fast. Watch: cold starts, execution/time limits
 cost at very high steady volume (a busy 24/7 service can be cheaper on flat-rate containers).
 → Lambda, Fargate, API Gateway, DynamoDB, S3, Step Functions · Functions, Container Apps, APIM,
 Cosmos DB, Blob Storage, Durable Functions · Cloud Run (+functions), API Gateway, Firestore, Cloud
-Storage, Workflows.
+Storage, Workflows · Workers, Durable Objects, D1, R2, Queues, Workflows (the whole stack is
+serverless by default, near-zero cold start on V8 isolates).
 
 ## Consistency & the CAP theorem
 
@@ -112,13 +118,15 @@ can't have both while partitioned. In practice it's a spectrum:
 strong); Cosmos DB offers **five levels** (strong, bounded staleness, session, consistent prefix,
 eventual) per account/request — session is the sweet spot for user-facing apps; Spanner is strongly
 consistent always (external consistency) and pays for it in write latency and cost; Firestore is
-strongly consistent too, including in multi-region configurations.
+strongly consistent too, including in multi-region configurations. On Cloudflare the choice is by
+*store*: Workers KV is eventually consistent (edge-cached), while Durable Objects and D1 are strongly
+consistent — pick per data type, as always.
 
 ## Locking & coordination
 
 - **Optimistic** (version number/CAS, retry on conflict): high concurrency, low contention. Default for most web workloads. → DynamoDB conditional writes · Cosmos DB ETags / optimistic concurrency · Firestore transactions, GCS `ifGenerationMatch` preconditions.
 - **Pessimistic** (acquire lock before acting): correctness under high contention, but reduces concurrency and risks deadlock.
-- **Distributed locks** (coordinate across nodes): use a purpose-built coordinator — keep them short-lived and fenced. → DynamoDB lock item / Redis (Redlock — know its caveats) · **Blob leases** (Azure's classic built-in lock) · Firestore lock doc / Redis. ZooKeeper/etcd when you're already running them.
+- **Distributed locks** (coordinate across nodes): use a purpose-built coordinator — keep them short-lived and fenced. → DynamoDB lock item / Redis (Redlock — know its caveats) · **Blob leases** (Azure's classic built-in lock) · Firestore lock doc / Redis · a **Durable Object** (single-threaded per key — the lock *is* the object, no external coordinator needed). ZooKeeper/etcd when you're already running them.
 - **Idempotency** often beats locking: design operations so a retry is harmless (idempotency keys), and you avoid coordinating at all.
 
 ## Rate limiting & backpressure
@@ -128,7 +136,9 @@ bucket** (smooths), **fixed/sliding window** (simple counts). Enforce at the edg
 with `Retry-After`. Pair with **exponential backoff + jitter** on the client. Counters live in a
 fast shared store (Redis/Valkey INCR + TTL on any cloud).
 → Edge/managed: API Gateway throttling + WAF rate rules · API Management policies + Front Door WAF ·
-Apigee quotas / Cloud Armor rate limiting. Counters: ElastiCache · Managed Redis · Memorystore.
+Apigee quotas / Cloud Armor rate limiting · Cloudflare WAF Rate Limiting (at the edge by default).
+Counters: ElastiCache · Managed Redis · Memorystore · a Durable Object (single-owner atomic counter,
+no external store).
 
 ## Event-driven architecture (EDA)
 
@@ -179,7 +189,7 @@ use a queue, stream, or event bus:
 
 - **Idempotency:** make handlers safe to run twice (at-least-once delivery *will* redeliver). Record an idempotency key (request/message id) in a store with a conditional write; on a duplicate, return the prior result instead of reprocessing.
 - **Deduplication:** SQS FIFO content-based dedup · Service Bus duplicate detection (built in) · Pub/Sub exactly-once delivery (regional) — or a manual dedup table with a TTL.
-- **Dead-letter queues (DLQ):** route messages that fail repeatedly to a DLQ for inspection instead of blocking the queue or losing them. Alarm on DLQ depth. → SQS DLQ · Service Bus DLQ (built in) · Pub/Sub dead-letter topics.
+- **Dead-letter queues (DLQ):** route messages that fail repeatedly to a DLQ for inspection instead of blocking the queue or losing them. Alarm on DLQ depth. → SQS DLQ · Service Bus DLQ (built in) · Pub/Sub dead-letter topics · Cloudflare Queues DLQ.
 - **Transactional outbox:** to publish an event *and* commit a DB write atomically, write both in one transaction (the event into an "outbox" table), then a stream/poller publishes the outbox row. Avoids the dual-write problem. → DynamoDB `TransactWriteItems` + Streams · Cosmos DB transactional batch + change feed · Firestore/Spanner transaction + change streams.
 - **Ordering:** strict order serializes a partition — SQS FIFO `MessageGroupId` · Service Bus sessions · Pub/Sub ordering keys / one Kinesis shard. Order is a throughput tax; only pay it where order actually matters.
 - **Circuit breaker:** stop hammering a failing dependency — trip open after N consecutive failures, fail fast, periodically probe to recover. Protects against cascading failure and runaway retries. (Library/app-level pattern on every cloud; service meshes and API gateways can enforce it.)

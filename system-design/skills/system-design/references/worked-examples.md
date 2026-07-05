@@ -3,9 +3,11 @@
 Condensed end-to-end designs that follow this skill's six-step loop, so there's a model to
 pattern-match against. They're deliberately terse — the *shape* of the reasoning is the lesson, not
 exhaustive detail. Architectures are in role terms; each ends with the service mapping per cloud
-(**AWS · Azure · GCP**). For a real request, expand the relevant one with the user's actual numbers,
-map to *their* cloud, and run the full Well-Architected gate. If the user's `Interview Prep`
-workspace is available, fuller treatments (16 designs) live in its `Systems Design 101.md`.
+(**AWS · Azure · GCP**), with a **Cloudflare** line on the designs that are edge-native (the rest fit
+an edge-first platform poorly, and forcing a mapping would be exactly the trap step 4 warns against).
+For a real request, expand the relevant one with the user's actual numbers, map to *their* cloud, and
+run the full Well-Architected gate. If the user's `Interview Prep` workspace is available, fuller
+treatments (16 designs) live in its `Systems Design 101.md`.
 
 ## Table of contents
 1. URL shortener
@@ -23,7 +25,7 @@ workspace is available, fuller treatments (16 designs) live in its `Systems Desi
 - **Requirements:** shorten a long URL → short code; redirect code → original. Read-heavy, low latency on redirect, highly available, codes never collide. Optional: custom aliases, expiry, click analytics.
 - **Estimate:** (see `references/estimation.md` worked example) 100M writes/day → ~1K write QPS / ~100K read QPS; ~270 TB over 5 yrs ×3 replication; hot cache ~500 MB.
 - **Architecture:** client → CDN/edge → API gateway → stateless handler. Write path: generate code (base-62 of a counter, or hash+collision-check), store mapping in a KV store. Read path: cache lookup → KV lookup → 301/302 redirect, served from cache/edge wherever possible. Async click-event stream → object store for analytics.
-- **Mapping:** AWS — DynamoDB · ElastiCache · CloudFront · API GW + Lambda · Kinesis → S3. Azure — Cosmos DB · Managed Redis · Front Door · APIM + Functions · Event Hubs → Blob/OneLake. GCP — Firestore · Memorystore · Cloud CDN + global LB · Cloud Run · Pub/Sub → BigQuery (analytics lands queryable for free).
+- **Mapping:** AWS — DynamoDB · ElastiCache · CloudFront · API GW + Lambda · Kinesis → S3. Azure — Cosmos DB · Managed Redis · Front Door · APIM + Functions · Event Hubs → Blob/OneLake. GCP — Firestore · Memorystore · Cloud CDN + global LB · Cloud Run · Pub/Sub → BigQuery (analytics lands queryable for free). Cloudflare — Workers KV or D1 for the mapping · Cache API at the edge · a Worker on the redirect path · click events → Pipelines → R2 (query with R2 SQL). The textbook edge fit: the redirect is served from the nearest POP, often without touching an origin.
 - **WA review:** Reliability — multi-zone KV store, no SPOF. Performance — cache + edge for read latency. Cost — serverless scales to zero. Security — validate input URLs, rate-limit creation (edge WAF).
 - **Tradeoffs / bottleneck:** counter-based codes need a distributed counter (or pre-allocated ranges per node) to avoid a write bottleneck; hashing avoids that but must handle collisions. Read path is cache-bound — cache hit ratio is the metric that matters.
 
@@ -59,7 +61,7 @@ workspace is available, fuller treatments (16 designs) live in its `Systems Desi
 
 - **Requirements:** cap requests per client per window; low added latency; distributed across many API nodes; fail open or closed (a choice — closed is safer for abuse, open is safer for availability).
 - **Architecture:** shared counter store keyed by client+window; algorithm = **token bucket** (allows bursts) or **sliding window** (smoother); check-and-decrement on each request; return **429 + Retry-After** when exceeded. Enforce at the edge so bad traffic dies early.
-- **Mapping:** managed throttling first — API Gateway usage plans + WAF rate rules · APIM rate-limit policies + Front Door WAF · Apigee quotas + Cloud Armor. Custom distributed counters: Redis/Valkey atomic INCR + TTL (ElastiCache · Managed Redis · Memorystore).
+- **Mapping:** managed throttling first — API Gateway usage plans + WAF rate rules · APIM rate-limit policies + Front Door WAF · Apigee quotas + Cloud Armor · Cloudflare WAF Rate Limiting. Custom distributed counters: Redis/Valkey atomic INCR + TTL (ElastiCache · Managed Redis · Memorystore), or a Durable Object as a single-owner atomic counter at the edge — no external store or network hop.
 - **WA review:** Performance — counter in memory, sub-ms. Reliability — decide fail-open vs fail-closed explicitly. Security — protects the system from abuse/DDoS.
 - **Tradeoffs / bottleneck:** accuracy vs cost — a per-node local limiter is fast but lets bursts through; a shared store is accurate but adds a network hop. The counter store is the SPOF — replicate it.
 
@@ -67,7 +69,7 @@ workspace is available, fuller treatments (16 designs) live in its `Systems Desi
 
 - **Requirements:** one event → notify many users across channels (push, email, SMS); reliable delivery; retries; user preferences; scale to spikes.
 - **Architecture:** event → pub/sub topic → fan-out to per-channel queues → channel workers → providers (APNs/FCM, email, SMS). Queues absorb spikes and isolate slow/failing channels; DLQ for undeliverable; prefs + idempotency keys in a KV store.
-- **Mapping:** AWS — SNS → SQS → Lambda; SES email; DynamoDB prefs. Azure — Event Grid → Service Bus queues → Functions; Communication Services (email/SMS/push); Cosmos DB prefs. GCP — Pub/Sub topic → per-channel subscriptions → Cloud Run; Firebase Cloud Messaging for push, partner email/SMS (SendGrid/Twilio); Firestore prefs.
+- **Mapping:** AWS — SNS → SQS → Lambda; SES email; DynamoDB prefs. Azure — Event Grid → Service Bus queues → Functions; Communication Services (email/SMS/push); Cosmos DB prefs. GCP — Pub/Sub topic → per-channel subscriptions → Cloud Run; Firebase Cloud Messaging for push, partner email/SMS (SendGrid/Twilio); Firestore prefs. Cloudflare — a Worker fans out to per-channel Queues → consumer Workers; Email Service for email, partner APIs for SMS/push; prefs in KV or D1 (no managed pub/sub bus, so the fan-out is explicit).
 - **WA review:** Reliability — queues + DLQ + retries; one bad channel doesn't block others. Operational — monitor per-channel queue depth and delivery rate. Cost — serverless scales with volume.
 - **Tradeoffs / bottleneck:** at-least-once delivery means duplicates → dedup with idempotency keys. Provider rate limits are the real bottleneck → the queue is what makes that survivable.
 

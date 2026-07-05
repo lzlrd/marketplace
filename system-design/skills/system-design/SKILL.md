@@ -1,20 +1,20 @@
 ---
 name: system-design
 description: >
-  Design real-world systems on AWS, Azure, or Google Cloud — or cloud-neutrally — grounded in the
-  vendors' Well-Architected frameworks. Use whenever the user wants to architect, design, or scale
-  a system; asks which cloud service to use, within one cloud (SQS vs Kinesis, Cloud Run vs GKE)
-  or across clouds (DynamoDB vs Cosmos DB vs Firestore); wants an architecture, data flow, or
-  component breakdown; needs capacity / back-of-envelope estimation (QPS, storage, availability);
-  wants a design reviewed for scalability, reliability, cost, or failure modes; is comparing
-  clouds for a workload; or mentions Well-Architected pillars, system design, or
-  distributed-systems patterns (caching, sharding, replication, messaging, event-driven, sagas,
-  agentic-AI/LLM systems). Trigger even without the words "system design" when the user is making
-  architecture or service-selection decisions. NOT for operating deployed resources, IaC, or
-  pipeline failures.
+  Design real-world systems on AWS, Azure, Google Cloud, or Cloudflare — or cloud-neutrally —
+  grounded in the vendors' Well-Architected frameworks. Use whenever the user wants to architect,
+  design, or scale a system; asks which cloud service to use, within one cloud (SQS vs Kinesis,
+  Cloud Run vs GKE, Workers vs Containers) or across clouds (DynamoDB vs Cosmos DB vs Firestore,
+  S3 vs R2, Lambda vs Workers); wants an architecture, data flow, or component breakdown; needs
+  capacity / back-of-envelope estimation (QPS, storage, availability); wants a design reviewed for
+  scalability, reliability, cost, or failure modes; is comparing clouds for a workload; or mentions
+  Well-Architected pillars, edge/serverless architecture, system design, or distributed-systems
+  patterns (caching, sharding, replication, messaging, event-driven, sagas, agentic-AI/LLM
+  systems). Trigger even without the words "system design" when the user is making architecture or
+  service-selection decisions. NOT for operating deployed resources, IaC, or pipeline failures.
 ---
 
-# System Design (AWS · Azure · Google Cloud)
+# System Design (AWS · Azure · Google Cloud · Cloudflare)
 
 Design systems the way a senior engineer would: pin the requirements, size the load, sketch the
 simplest architecture that meets them, map each piece to a best-fit managed service on the user's
@@ -85,16 +85,20 @@ queue"), not yet by its product — role-first naming is what makes the design p
 ### 4. Map components to cloud services
 
 First determine the **target cloud**: an explicit statement beats codebase/infra clues beats org
-context. If it's unknown and the answer depends on it, ask once ("AWS, Azure, or Google Cloud — or
-keep it neutral?"). If the design should stay neutral, keep components in role terms and give the
-three-way mapping for the load-bearing ones. If the user is *choosing* a cloud, weigh gravity first
-(where their data, team skills, and enterprise agreements already are), then distinctive strengths —
-each per-cloud file opens with them.
+context. If it's unknown and the answer depends on it, ask once ("AWS, Azure, Google Cloud, or
+Cloudflare — or keep it neutral?"). If the design should stay neutral, keep components in role terms
+and give the mapping for the load-bearing ones. If the user is *choosing* a cloud, weigh gravity
+first (where their data, team skills, and enterprise agreements already are), then distinctive
+strengths — each per-cloud file opens with them. **Cloudflare is a different axis:** it's edge-first
+(no VMs, managed Kubernetes, or regional VPC), so it's sometimes the whole stack (Workers + D1 + R2 +
+Durable Objects) and sometimes the edge/data tier *in front of* a hyperscaler origin (Workers +
+Hyperdrive over a hosted Postgres, R2 to escape egress fees) — treat "which hyperscaler" and "edge on
+Cloudflare?" as separable questions.
 
-Then read **only the relevant cheat-sheet** — `references/aws.md`, `references/azure.md`, or
-`references/gcp.md`: one for the target cloud, two for a head-to-head, all three only when the
-user explicitly wants the full three-way comparison (the quick table below often covers a shallow
-one on its own). Map each
+Then read **only the relevant cheat-sheet** — `references/aws.md`, `references/azure.md`,
+`references/gcp.md`, or `references/cloudflare.md`: one for the target cloud, two for a head-to-head,
+more only when the user explicitly wants a broader comparison (the quick table below often covers a
+shallow one on its own). Map each
 component to a best-fit service and justify it from the requirement. Prefer **managed and
 serverless** — every vendor's Well-Architected default — unless control, cost at scale, or a
 specific capability argues for running your own. For each non-obvious choice, name the realistic
@@ -103,39 +107,39 @@ write volume, no joins; ad-hoc relational queries would flip this").
 
 The default picks at a glance — the per-cloud files carry the "reach for instead when…" reasoning:
 
-| Need | AWS | Azure | Google Cloud |
-|---|---|---|---|
-| Serverless functions | Lambda | Functions (Flex Consumption) | Cloud Run functions |
-| Containers (default) | ECS on Fargate | Container Apps | Cloud Run |
-| Kubernetes | EKS | AKS | GKE (Autopilot) |
-| VMs / raw control | EC2 + ASG | Virtual Machines + VMSS | Compute Engine + MIG |
-| Relational DB | Aurora | Azure SQL Database | Cloud SQL / AlloyDB |
-| Key-value / document | DynamoDB | Cosmos DB | Firestore / Bigtable |
-| Cache | ElastiCache (Valkey) | Azure Managed Redis | Memorystore |
-| Object storage | S3 | Blob Storage | Cloud Storage |
-| Queue (decouple) | SQS | Service Bus | Pub/Sub / Cloud Tasks |
-| Pub/sub / event bus | SNS / EventBridge | Event Grid | Pub/Sub / Eventarc |
-| Stream (ordered, replay) | Kinesis / MSK | Event Hubs | Pub/Sub / Managed Kafka |
-| Stream processing | Managed Service for Apache Flink | Stream Analytics | Dataflow |
-| Workflow orchestration | Step Functions | Durable Functions / Logic Apps | Workflows |
-| API front door | API Gateway | API Management | API Gateway / Apigee |
-| CDN / edge | CloudFront | Front Door (Std/Premium) | Cloud CDN |
-| L7 load balancer | ALB | Application Gateway | Global external Application LB |
-| L4 load balancer | NLB | Load Balancer | Network LB |
-| DNS | Route 53 | Azure DNS (+ Traffic Manager) | Cloud DNS |
-| Full-text search | OpenSearch | AI Search | Vertex AI Search / partner Elastic |
-| Warehouse / analytics | Redshift / Athena | Microsoft Fabric | BigQuery |
-| Observability | CloudWatch + X-Ray | Azure Monitor + App Insights | Cloud Monitoring / Logging / Trace |
-| Workload identity | IAM roles | Entra ID managed identities | IAM service accounts |
-| End-user identity | Cognito | Entra External ID | Identity Platform |
-| Secrets / keys | Secrets Manager / KMS | Key Vault | Secret Manager / Cloud KMS |
-| LLM (managed models) | Bedrock | Microsoft Foundry (Azure OpenAI) | Vertex AI (Gemini) |
-| AI agents at scale | Bedrock AgentCore | Foundry Agent Service | Agent Engine + ADK |
+| Need | AWS | Azure | Google Cloud | Cloudflare |
+|---|---|---|---|---|
+| Serverless functions | Lambda | Functions (Flex Consumption) | Cloud Run functions | Workers |
+| Containers (default) | ECS on Fargate | Container Apps | Cloud Run | Containers |
+| Kubernetes | EKS | AKS | GKE (Autopilot) | — |
+| VMs / raw control | EC2 + ASG | Virtual Machines + VMSS | Compute Engine + MIG | — |
+| Relational DB | Aurora | Azure SQL Database | Cloud SQL / AlloyDB | D1 · Hyperdrive (front external) |
+| Key-value / document | DynamoDB | Cosmos DB | Firestore / Bigtable | Workers KV · Durable Objects |
+| Cache | ElastiCache (Valkey) | Azure Managed Redis | Memorystore | Cache API · KV |
+| Object storage | S3 | Blob Storage | Cloud Storage | R2 (zero egress) |
+| Queue (decouple) | SQS | Service Bus | Pub/Sub / Cloud Tasks | Queues |
+| Pub/sub / event bus | SNS / EventBridge | Event Grid | Pub/Sub / Eventarc | — (fan-out via Workers) |
+| Stream (ordered, replay) | Kinesis / MSK | Event Hubs | Pub/Sub / Managed Kafka | Pipelines (→ R2) |
+| Stream processing | Managed Service for Apache Flink | Stream Analytics | Dataflow | Pipelines (SQL at ingest) |
+| Workflow orchestration | Step Functions | Durable Functions / Logic Apps | Workflows | Workflows |
+| API front door | API Gateway | API Management | API Gateway / Apigee | Workers · API Shield |
+| CDN / edge | CloudFront | Front Door (Std/Premium) | Cloud CDN | Cloudflare CDN + Workers |
+| L7 load balancer | ALB | Application Gateway | Global external Application LB | Load Balancing |
+| L4 load balancer | NLB | Load Balancer | Network LB | Spectrum |
+| DNS | Route 53 | Azure DNS (+ Traffic Manager) | Cloud DNS | Cloudflare DNS |
+| Full-text search | OpenSearch | AI Search | Vertex AI Search / partner Elastic | — |
+| Warehouse / analytics | Redshift / Athena | Microsoft Fabric | BigQuery | R2 SQL |
+| Observability | CloudWatch + X-Ray | Azure Monitor + App Insights | Cloud Monitoring / Logging / Trace | Workers Observability + Logpush |
+| Workload identity | IAM roles | Entra ID managed identities | IAM service accounts | Service bindings |
+| End-user identity | Cognito | Entra External ID | Identity Platform | Access (ZTNA) |
+| Secrets / keys | Secrets Manager / KMS | Key Vault | Secret Manager / Cloud KMS | Secrets Store |
+| LLM (managed models) | Bedrock | Microsoft Foundry (Azure OpenAI) | Vertex AI (Gemini) | Workers AI · AI Gateway |
+| AI agents at scale | Bedrock AgentCore | Foundry Agent Service | Agent Engine + ADK | Agents SDK |
 
 ### 5. Validate against the Well-Architected pillars (the gate)
 
 Don't ship a design without walking it through the pillars — this is where avoidable mistakes get
-caught. All three vendors publish a Well-Architected framework (AWS: six pillars; Azure: five;
+caught. All three hyperscalers publish a Well-Architected framework (AWS: six pillars; Azure: five;
 Google Cloud: six); they share five themes, so review against those and add sustainability where the
 framework has it:
 
@@ -149,9 +153,11 @@ framework has it:
 For a full design, run the **design-quality self-review checklist** in
 `references/well-architected.md` — it catches requirement gaps, missing fault-tolerance,
 extensibility, and unstated tradeoffs, and the same file has each vendor's exact pillars and
-design principles for a framework-faithful review. For a quick service-choice answer, the pillar
-list above is gate enough. Either way, explicitly identify the bottleneck, the dominant failure
-mode, and the one or two tradeoffs you consciously made.
+design principles for a framework-faithful review. **Cloudflare publishes no formal Well-Architected
+framework** — review a Cloudflare design against the same five shared themes above (its Reference
+Architecture library is the closest equivalent), as `references/well-architected.md` notes. For a
+quick service-choice answer, the pillar list above is gate enough. Either way, explicitly identify
+the bottleneck, the dominant failure mode, and the one or two tradeoffs you consciously made.
 
 ### 6. Document the design
 
@@ -195,7 +201,7 @@ carries an architecture better than prose. Otherwise describe it clearly enough 
 
 - **Designing without constraints.** No scale/consistency/latency numbers → the design is a guess. Pin them or ask.
 - **Buzzword-driven selection.** "Use Kafka, it scales" isn't a reason. Tie every choice to the requirement it serves.
-- **Porting service names, not designs.** The three clouds' "equivalents" differ in ways that change the design: Cosmos DB prices by RU and offers five consistency levels, DynamoDB doesn't; Pub/Sub is one service covering queue + fan-out + stream, SQS/SNS/Kinesis are three; a GCP load balancer is global anycast, an ALB is regional. Re-derive the choice from the requirement on the target cloud.
+- **Porting service names, not designs.** The clouds' "equivalents" differ in ways that change the design: Cosmos DB prices by RU and offers five consistency levels, DynamoDB doesn't; Pub/Sub is one service covering queue + fan-out + stream, SQS/SNS/Kinesis are three; a GCP load balancer is global anycast, an ALB is regional; Cloudflare Workers KV is eventually consistent and there's no managed event bus, so a design that leans on strong-read KV or SNS-style fan-out must be re-derived, not translated. Re-derive the choice from the requirement on the target cloud.
 - **Single points of failure.** One zone, one node, one queue with no DLQ. Walk the failure modes in step 5.
 - **Average-case sizing.** Capacity must cover peak (2–3× avg), not the average, or it falls over exactly when it matters.
 - **Over-engineering.** Microservices, multi-region, and event sourcing for a system that serves 10 QPS is its own failure. The simplest design that meets the requirements is the correct one; add complexity only when an estimate forces it.
@@ -208,7 +214,7 @@ Read these as the step needs them — don't front-load all of them:
 
 - `references/estimation.md` — capacity formulas, the latency numbers, availability/9s math, a worked estimate. (Step 2)
 - `references/patterns.md` — distributed-systems patterns (scaling, load balancing, caching, sharding, replication, messaging, CDN, microservices, serverless, CAP/consistency, locking) plus event-driven architecture, the saga pattern, event sourcing/CQRS, reliable-messaging building blocks (idempotency, dedup, DLQ, transactional outbox, circuit breaker), and serverless anti-patterns — each with its AWS/Azure/GCP incarnation. (Step 3)
-- `references/aws.md` / `references/azure.md` / `references/gcp.md` — per-cloud service-selection cheat-sheets with the criteria for picking between close alternatives, including AI/ML & generative-AI services. Read the target cloud's file; two for a head-to-head, three only for an explicit three-way comparison. (Step 4)
+- `references/aws.md` / `references/azure.md` / `references/gcp.md` / `references/cloudflare.md` — per-cloud service-selection cheat-sheets with the criteria for picking between close alternatives, including AI/ML & generative-AI services. Read the target cloud's file; two for a head-to-head, more only for an explicit multi-cloud comparison. `cloudflare.md` is edge-first and flags what the platform deliberately lacks (VMs, managed Kubernetes, event bus). (Step 4)
 - `references/well-architected.md` — the three vendors' frameworks (pillars + design principles), a cross-framework mapping, and the design-quality self-review checklist. (Step 5)
 - `references/networking-os.md` — networking and OS fundamentals that shape designs (OSI/TCP/UDP, DNS, TLS, L4-vs-L7 load balancing, NAT/BGP/anycast, sockets/ports/connection limits, kernel tunables) with the per-cloud product names, network-scope differences (global vs regional VPCs), and routing policies. Read when a design hinges on networking or low-level behavior.
 - `references/agentic-ai.md` — designing LLM **agent** systems: the decisions specific to agents, then the three platforms (Bedrock AgentCore, Foundry Agent Service, Vertex AI Agent Engine / Gemini Enterprise Agent Platform). Read only when the design is an autonomous/tool-using agent, not a single model call.
@@ -216,6 +222,7 @@ Read these as the step needs them — don't front-load all of them:
 
 ## Sources & attribution
 
-Generalized from the `aws-system-design` skill against the three vendors' Well-Architected docs;
+Generalized from the `aws-system-design` skill against the hyperscalers' Well-Architected docs;
 parts of `patterns.md`/`agentic-ai.md` adapted from zxkane/aws-skills (MIT, © 2025 Mengxin Zhu).
-Service facts verified against vendor docs and announcements, July 2026.
+Service facts verified against vendor docs and announcements (AWS, Azure, Google Cloud, and
+Cloudflare Developer Docs), July 2026.

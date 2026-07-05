@@ -1,9 +1,11 @@
 # Well-Architected Frameworks & Design-Quality Checklist
 
-Tools for step 5 (the validation gate): all three vendors' frameworks — pillars and design
+Tools for step 5 (the validation gate): the three hyperscalers' frameworks — pillars and design
 principles — a cross-framework map, and a design-quality self-review checklist. Review against the
 **target cloud's own framework** (its review tooling, docs, and reviewers speak that dialect); the
-checklist at the end applies everywhere. Pillar sets current as of mid-2026.
+checklist at the end applies everywhere — including on **Cloudflare, which publishes no formal
+Well-Architected framework** (see the note after the Google Cloud pillars). Pillar sets current as of
+mid-2026.
 
 ## The frameworks at a glance
 
@@ -92,6 +94,22 @@ service to the access pattern; measure at peak.
 **Sustainability** — build and manage workloads that are environmentally sustainable; high
 utilization; efficient regions and hardware.
 
+## Cloudflare — no formal framework; use the shared themes
+
+Cloudflare does **not** publish a Well-Architected framework with named pillars. Its equivalent is
+the **Reference Architecture library** (`developers.cloudflare.com/reference-architecture/`) — design
+guides and reference architectures (SASE, edge apps, multi-cloud) plus per-product best-practices and
+limits pages. So on Cloudflare, run step 5 against the **five shared themes** at the top of this file,
+with edge-first emphasis:
+
+- **Security** — Cloudflare's core competency: WAF, unmetered DDoS, Zero Trust (Access/Gateway), TLS and secrets at the edge. Least privilege via scoped API tokens and service bindings; keep the origin behind Tunnel (no open inbound ports).
+- **Reliability** — the anycast network fails over between POPs by default; lean on Durable Objects for single-owner consistency, Queues + DLQ for async work, and Workflows for durable multi-step execution. Know the platform limits (Worker CPU time, D1 size, DO storage) — they are the real ceilings.
+- **Performance Efficiency** — global by default (code and data at every POP); use Smart Placement when a Worker is back-end-bound, cache aggressively (Cache API / Tiered Cache), and pick the edge-native store that matches the access pattern.
+- **Cost Optimization** — consumption pricing that scales to zero; R2's zero egress is often the single biggest lever versus a hyperscaler; bound Workers AI inference spend with AI Gateway.
+- **Operational Excellence** — Workers Observability + Logpush for logs/metrics; small, reversible deploys via Wrangler / Workers Builds; Health Checks on origins.
+
+The design-quality checklist below is cloud-agnostic and applies unchanged.
+
 ## Design-quality self-review checklist
 
 Derived from Amazon's "System Design" functional competency behaviors — the traits that distinguish
@@ -140,5 +158,6 @@ you're in.
 
 Sources: AWS Well-Architected Framework (`docs.aws.amazon.com/wellarchitected/`) · Microsoft Azure
 Well-Architected Framework (`learn.microsoft.com/azure/well-architected/`) · Google Cloud
-Well-Architected Framework (`docs.cloud.google.com/architecture/framework`) · Amazon System Design
+Well-Architected Framework (`docs.cloud.google.com/architecture/framework`) · Cloudflare Reference
+Architecture library (`developers.cloudflare.com/reference-architecture/`) · Amazon System Design
 functional competency guide.
