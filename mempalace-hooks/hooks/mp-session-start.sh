@@ -1,7 +1,8 @@
 #! /usr/bin/env bash
 
-# Mempalace-hooks · SessionStart (MCP-only). Injects one active directive telling Claude to load
-# durable memory from the connected mempalace MCP at session start, resume, clear, or compact.
+# Mempalace-hooks · SessionStart. Injects one active directive telling Claude to load durable memory —
+# the mempalace MCP, or the mempalace CLI as fallback — and the recent session diary at session start,
+# resume, clear, or compact.
 # A hook cannot call MCP tools; only Claude can. So this nudges and never reads or writes memory
 # itself. Its job over the always-loaded CLAUDE.md block is freshness: a short "load it now"
 # imperative placed where the block's salience is weakest (top of a new session, and right after a
@@ -33,5 +34,5 @@ sid="${sid//[^A-Za-z0-9_-]/}"   # harden: session_id feeds a path, so a crafted 
 # 7-day window; raise it only if a single session ever realistically outlives that.
 find "$state_dir" -type f -mtime +7 -delete 2>/dev/null || true
 
-printf '%s\n' "[mempalace] New session. Before asserting anything about the user, a person, or a project, load durable memory from the mempalace MCP: call mcp__mempalace__mempalace_status for the palace overview, then mcp__mempalace__mempalace_search / mcp__mempalace__mempalace_kg_query as needed. Query first, don't guess."
+printf '%s\n' "[mempalace] New session. Before asserting anything about the user, a person, or a project, load durable memory: with the mempalace MCP, call mcp__mempalace__mempalace_status then mempalace_search / mempalace_kg_query; without it, fall back to the mempalace CLI (mempalace status, mempalace search <query>, mempalace wake-up). Also read the recent session diary (wing_diary — the last day or two, plus the newest handoff) so you resume with context. Query first, don't guess; if neither MCP nor CLI is present, say memory is offline this session."
 exit 0

@@ -9,6 +9,7 @@ Wires the [`mempalace`](https://pypi.org/project/mempalace/) MCP memory server i
 | **`CLAUDE.md` block** | Every session | A managed block ([`setup/mempalace-block.md`](setup/mempalace-block.md)) documenting the two-store discipline: **drawers** (verbatim narrative, semantic search) and the **knowledge graph** (atomic `subject → predicate → object` facts, looked up by entity). This is the reference; the hooks keep it salient. |
 | **`SessionStart` hook** | `startup` · `resume` · `clear` · `compact` | Injects a short active directive: load durable memory from the mempalace MCP (`mempalace_status`, then `search` / `kg_query`) before asserting anything about you, a person, or a project. |
 | **`UserPromptSubmit` hook** | Writing/coding turns only | Injects a directive to pull your recorded voice/conventions (`writing-voice` / `coding-style` rooms) before responding, at most once per signal per session. |
+| **Session diary + `/remember`** | Session start; on demand | Drawers in `wing_diary`, one room per day (ISO date), each topped with a `## Handoff`. Loaded at `SessionStart`; written or refreshed by [`/mempalace-hooks:remember`](skills/remember/SKILL.md). The cross-session continuity layer — claude-remember-style, kept in the palace. |
 
 ## Why MCP-Only
 
@@ -28,6 +29,16 @@ Two properties worth knowing:
 - **Wide net, on purpose.** Dedup makes a false positive cheap: it fires once, then goes quiet, while a miss costs the whole feature on that turn. So the keyword net leans toward recall. Expect the coding directive on most of the first dev turn of a session. That is intended.
 
 Cost is one `python3` invocation per prompt to evaluate the gate (tens of milliseconds, imperceptible against a model response) and, on a matching first turn, one small marker file.
+
+## Session diary
+
+A `claude-remember`-style continuity layer, kept in the palace: a running work log as **drawers** in `wing_diary`, one room per day (room slug = the ISO date), each with a `## Handoff` at the top — what's next and the non-obvious context the next session needs. Not the native diary tool, and not files in the repo — our own drawer convention.
+
+It is model-driven, not auto-captured. `SessionEnd`/`PreCompact` get no model turn, so nothing writes memory behind your back; the diary lives on three deliberate touches instead:
+
+- **Loaded at start.** `SessionStart` nudges Claude to read the last day or two plus the newest `## Handoff`, so it resumes with context.
+- **Written on demand.** [`/mempalace-hooks:remember`](skills/remember/SKILL.md) writes or refreshes today's entry — the explicit handoff, functionally like claude-remember's `/remember`.
+- **Curated in-session.** Per the managed block, Claude updates the day's drawer as durable things surface and refreshes the handoff before wrapping up.
 
 ## Install
 
@@ -52,7 +63,7 @@ Cost is one `python3` invocation per prompt to evaluate the gate (tens of millis
 
 ## Requirements
 
-- A `mempalace` MCP server connected in Claude Code (local stdio or remote). The hooks inject directives that reference `mcp__mempalace__*` tools. With no such server connected, the directives have nothing to act on.
+- A `mempalace` **MCP** server connected in Claude Code (local stdio or remote), **or** the `mempalace` **CLI** (`pip install mempalace`). The directives prefer the MCP (`mcp__mempalace__*` tools); with no MCP they fall back to the CLI — `search` / `wake-up` / `status` for recall, `mine` to write. With neither, the directives say memory is offline for the session.
 - `bash` and `python3`. `python3` does the JSON parse and the word-boundary gating. Without it the `UserPromptSubmit` hook fails safe and injects nothing.
 
 ## Layout
@@ -66,6 +77,7 @@ hooks/            hooks.json          → registers the two hooks
                   mp-style-pull.sh    → UserPromptSubmit gated style-pull
 setup/            mempalace-block.md  → the managed CLAUDE.md block
                   setup.sh / uninstall.sh
+skills/           remember/SKILL.md   → /mempalace-hooks:remember
 ```
 
 Both hooks run `set -uo pipefail`, always exit 0, and emit plain text only, so they cannot break a session.

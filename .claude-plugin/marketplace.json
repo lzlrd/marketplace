@@ -12,7 +12,7 @@
     {
       "name": "mempalace-hooks",
       "source": "./mempalace-hooks",
-      "description": "Wires the mempalace MCP memory server into Claude Code: two directive hooks that load palace context at session start and pull the user's writing and coding voice from the MCP palace before writing or coding. MCP-only, with no local CLI and no auto-mining.",
+      "description": "Wires the mempalace memory server into Claude Code: two directive hooks that load palace context and pull the user's writing/coding voice, plus a session diary and a /remember handoff for cross-session continuity. MCP-first, with a mempalace-CLI fallback when the MCP isn't connected, and no auto-mining.",
       "category": "workflow"
     },
     {
