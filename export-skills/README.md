@@ -23,9 +23,9 @@ differs between the two. There is no `--lenient` flag; lenient is the default.
 
 - A tiered report: ready as-is, needs the sandbox, needs a named Desktop MCP, works but
   output-limited, and the excluded set grouped by reason.
-- Upload-ready zips under an output folder: one per plugin (each qualifying skill as its own
-  `<skill>/SKILL.md` subfolder) and one per personal skill. On claude.ai, upload each skill folder
-  individually.
+- Upload-ready zips under an output folder: one per skill (plugin skills named `<plugin>-<skill>.zip`,
+  personal skills `<skill>.zip`), each with `SKILL.md` at the root and kept under claude.ai's 200-file
+  limit. Upload each zip on its own.
 
 ## How it works
 
@@ -36,7 +36,7 @@ differs between the two. There is no `--lenient` flag; lenient is the default.
    inventory ── plugin cache + personal skills, traps handled, Desktop MCP list read
    classify  ── three criteria: runs in Desktop · relevant to Desktop · MCP available
    mode      ── lenient counts the sandbox in; strict reads "no code execution" literally
-   package   ── curate (SKILL.md + resource dirs, repo noise dropped), zip, verify
+   package   ── curate (SKILL.md + resource dirs, repo noise dropped), one zip per skill (≤200 files), verify
 ```
 
 Two bundled scripts do the deterministic, trap-ridden parts (inventory and packaging); the model

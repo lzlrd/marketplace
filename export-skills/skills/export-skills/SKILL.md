@@ -91,16 +91,16 @@ Manifest shape:
 ```
 
 It curates each skill (SKILL.md plus resource dirs; repo noise like `.git`, `tests`, `node_modules`,
-`.claude-plugin` dropped), writes **one zip per plugin** (each qualifying skill as its own
-`<skill>/SKILL.md` subfolder) and **one zip per personal skill**, and verifies every zip: SKILL.md at
-each folder root, biggest members listed so un-curated bloat stands out, and credential-ish names
-flagged for review.
+`.claude-plugin` dropped) and writes **one zip per skill** (`<skill>/SKILL.md` at the root; plugin
+skills get a `<plugin>-<skill>.zip` filename so same-named skills from different plugins do not
+collide). It verifies every zip: SKILL.md at the root, the biggest members listed so un-curated bloat
+stands out, credential-ish names flagged, and the **200-file upload limit** enforced (a skill over
+the limit is flagged to trim, since a single skill cannot be split across uploads).
 
 ### 7. Report
 
 Give the user the tiered report, the path to the zips, and how to upload: on claude.ai, upload each
-`<skill>/` folder from a plugin zip individually. The SKILL.md-at-root invariant is what makes that
-work.
+per-skill zip on its own. The SKILL.md-at-root invariant is what makes that work.
 
 ## Notes
 

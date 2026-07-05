@@ -2,7 +2,7 @@
 """Package qualifying skills into upload-ready zips for Claude Desktop.
 
 Reads a qualifiers manifest (produced after classification) and writes curated
-zips: one per plugin for plugin skills, one per skill for personal skills. Every
+zips: one per skill, each kept under claude.ai's 200-file upload limit. Every
 skill folder keeps SKILL.md at its root, which is what claude.ai requires on
 upload. This encodes Phase 6 of references/process.md.
 
@@ -27,6 +27,7 @@ DROP_DIRS = {".github", "tests", "src", "node_modules", ".git", "dist", "build",
              "desktop-extension", ".in_use", ".claude-plugin", "eval-viewer",
              "agents", "__pycache__"}
 JUNK_FILES = {".DS_Store"}
+MAX_FILES = 200  # claude.ai rejects a skill upload with more than 200 files.
 SECRET_RE = re.compile(
     r"(^|/)(\.env(\.|$)|.*secret.*|.*token.*|.*\.pem$|id_rsa|.*credential.*|.*\.key$)",
     re.I)
@@ -68,11 +69,14 @@ def add_skill(zf, skill_dir, folder):
     return added
 
 
-def verify(added):
+def verify(added, max_files):
     names = {a for a, _ in added}
     folders = {a.split("/")[0] for a in names}
     issues = [f"MISSING SKILL.md at root of {f}/" for f in sorted(folders)
               if f"{f}/SKILL.md" not in names]
+    if len(added) > max_files:
+        issues.append(f"{len(added)} files exceeds the {max_files}-file upload "
+                      f"limit; trim this skill before uploading")
     secrets = sorted(a for a in names if SECRET_RE.search(a))
     biggest = sorted(added, key=lambda x: x[1], reverse=True)[:3]
     return issues, secrets, biggest
@@ -90,34 +94,29 @@ def main():
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    plugin_groups, personal = {}, []
-    for s in manifest["skills"]:
-        if s.get("kind") == "personal" or not s.get("plugin"):
-            personal.append(s)
-        else:
-            plugin_groups.setdefault(s["plugin"], []).append(s)
-
+    # One zip per skill (claude.ai uploads a single skill at a time). Plugin
+    # skills get a plugin-prefixed filename so two plugins' same-named skills do
+    # not collide on disk; the folder inside the zip stays the bare skill name so
+    # claude.ai names the upload correctly.
     report = []
-    for plugin, group in sorted(plugin_groups.items()):
-        zip_path = out / f"{plugin}.zip"
+    for s in sorted(manifest["skills"], key=lambda x: (x.get("plugin") or "", x["name"])):
+        name = s["name"]
+        plugin = None if s.get("kind") == "personal" else s.get("plugin")
+        stem = f"{plugin}-{name}" if plugin else name
+        zip_path = out / f"{stem}.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            added = [m for s in group for m in add_skill(zf, s["skill_dir"], s["name"])]
-        report.append((zip_path, [s["name"] for s in group], verify(added)))
-    for s in sorted(personal, key=lambda x: x["name"]):
-        zip_path = out / f"{s['name']}.zip"
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            added = add_skill(zf, s["skill_dir"], s["name"])
-        report.append((zip_path, [s["name"]], verify(added)))
+            added = add_skill(zf, s["skill_dir"], name)
+        report.append((zip_path, name, len(added), verify(added, MAX_FILES)))
 
-    print(f"# Packaged {len(report)} zip(s) in {mode} mode -> {out}\n")
+    print(f"# Packaged {len(report)} per-skill zip(s) in {mode} mode -> {out}\n")
     ok = True
-    for zip_path, names, (issues, secrets, biggest) in report:
-        print(f"## {zip_path.name}  ({', '.join(names)})")
+    for zip_path, name, n_files, (issues, secrets, biggest) in report:
+        print(f"## {zip_path.name}  ({name}, {n_files} file{'s' if n_files != 1 else ''})")
         for arc, size in biggest:
             print(f"   {size:>9,} B  {arc}")
-        for name in secrets:
+        for member in secrets:
             ok = False
-            print(f"   ! credential-ish member, review before upload: {name}")
+            print(f"   ! credential-ish member, review before upload: {member}")
         for issue in issues:
             ok = False
             print(f"   ! {issue}")

@@ -132,11 +132,15 @@ default and Strict is opt-in with `--strict`.
 `package.py` reads the qualifiers manifest and does the layout, curation, and verification below.
 
 **Layout scheme**
-- Plugin skills → **one zip per plugin**, containing each qualifying skill as its own
-  `<skill>/SKILL.md` subfolder.
-- Personal skills → **one zip per skill**.
+- **One zip per skill** — every qualifying skill, plugin or personal, gets its own zip. claude.ai
+  uploads a single skill at a time, so a per-plugin bundle is the wrong shape.
+- Zip filename: personal skills use `<skill>.zip`; plugin skills use `<plugin>-<skill>.zip` so two
+  plugins' same-named skills do not collide on disk. The folder inside the zip is the bare
+  `<skill>/`, so claude.ai names the upload correctly.
 - **Invariant:** every skill folder has `SKILL.md` at its root (claude.ai upload requirement).
-  Plugin-bundle zips hold multiple skill folders; the user uploads each folder individually.
+- **200-file limit:** claude.ai rejects a skill with more than 200 files. `package.py` enforces this
+  and flags any skill over the limit. A single skill cannot be split across uploads, so an over-limit
+  skill must be trimmed by hand (drop the heavy `examples`/`assets` it does not actually need).
 
 **Curation** — copy `SKILL.md` plus:
 - **KEEP** resource dirs: `references`, `reference`, `scripts`, `templates`, `assets`, `examples`,
@@ -149,6 +153,7 @@ default and Strict is opt-in with `--strict`.
   SKILL.md references it by name.
 
 **Verify after packing** (`package.py` prints this)
+- File count per zip, with the 200-file upload limit enforced (over-limit skills flagged to trim).
 - Biggest members of each zip, so un-curated repo bloat stands out and can be re-trimmed.
 - `SKILL.md` sits at every skill-folder root.
 - Member names grepped for credential-ish patterns (`.env`, `secret`, `token`, `.pem`, `id_rsa`,
