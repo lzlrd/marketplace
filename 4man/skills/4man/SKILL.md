@@ -170,9 +170,12 @@ the repo, including .pipeline/ or CLAUDE.md.**
 1. **Identity** (from `.gitconfig`): `git config user.name` and `git config user.email`.
 2. **Workspace key**: `git config --get remote.origin.url` if set, else the repo's
    absolute path. Combine with the author email to key the profile.
-3. **Retrieve** the stored style profile for this workspace key: from the **mempalace
-   MCP if connected**; else, if the `mempalace` CLI is installed, `mempalace search` /
-   `mempalace wake-up` for it. If found, use it.
+3. **Retrieve** the stored style profile for this workspace key — the requestor's
+   `coding-style` and `writing-voice` conventions (mempalace `wing_user`): from the
+   **mempalace MCP if connected**; else, if the `mempalace` CLI is installed,
+   `mempalace search --wing wing_user` / `mempalace wake-up` for it. (If the
+   `mempalace-hooks` plugin is installed, `/mempalace-hooks:match-style` is the same
+   pull in one step.) If found, use it.
 4. **First-run derivation** (no profile found, or mempalace absent): build from the
    requestor's **human-authored commits only**:
    - List candidates: `git log --no-merges --pretty=format:'%H%x1f%an%x1f%ae%x1f%B%x1e'`
@@ -191,14 +194,16 @@ the repo, including .pipeline/ or CLAUDE.md.**
      keep it in session memory for this run and persist nothing.
 
 ### 1b. Development preferences (durable, mempalace — what the requestor has told us over time)
-If the **mempalace MCP is connected**, retrieve the requestor's durable development /
-stylistic preferences — the standing instructions they've given across sessions, not
-tied to this repo. Examples: *target the latest stable SDK/runtime versions that don't
-cause issues* (e.g. iOS 25 over 23.x, Android 16 over 12), shebang styling, preferred
-toolchain/installer, formatting defaults. Query the user/preferences space (e.g.
-`wing_user` / `hall_preferences`, `wing_code` / `hall_advice`) and fold what's relevant
-into a **`## Development preferences`** block. These are user-wide, not workspace-keyed.
-If mempalace is absent, leave the block empty and note it.
+Retrieve the requestor's durable development / stylistic preferences — their
+**`working-prefs`** (mempalace `wing_user`): the standing instructions they've given
+across sessions, not tied to this repo. Examples: *target the latest stable SDK/runtime
+versions that don't cause issues* (e.g. iOS 25 over 23.x, Android 16 over 12), shebang
+styling, preferred toolchain/installer, formatting defaults. Pull them from the
+**mempalace MCP if connected**; else, if the `mempalace` CLI is installed,
+`mempalace search --wing wing_user` / `mempalace wake-up` (also `hall_preferences` /
+`wing_code` / `hall_advice` if your palace uses them). Fold what's relevant into a
+**`## Development preferences`** block. These are user-wide, not workspace-keyed. If
+neither the MCP nor the CLI is available, leave the block empty and note it.
 
 ### 1c. Binding CLAUDE.md rules (distilled once, by you)
 Read all applicable CLAUDE.md — repo root, any nested CLAUDE.md covering the files in
@@ -251,7 +256,11 @@ context blocks (1a/1b/1c), and any exploration findings. It produces the spec an
 ## Step 5 — Review
 **First, commit the integrated work** on the working branch in the requestor's commit
 style (Step 1a) — those commits are the diff the Reviewer reads and, in PR mode, what you
-push; a CHANGES-REQUESTED re-run just adds follow-up commits.
+push; a CHANGES-REQUESTED re-run just adds follow-up commits. **Humanize crew-authored
+prose (optional).** Anything the crew wrote as prose — commit messages, the PR body,
+docs/READMEs in the change — should read as the requestor, not a model: if the
+`humanizer` plugin is installed, run `/humanizer:humanizer` over it before finalizing;
+skip silently if not.
 1. **Security-guidance bootstrap (before the security pass).** Use the `security-guidance`
    convention: a committed, codebase-specific security policy under `.claude/`. If none
    exists in the workspace — check `<repo>/.claude/claude-security-guidance.md`,
