@@ -28,9 +28,9 @@ strictly READ-ONLY with respect to the repository.
   don't separately re-read the full CLAUDE.md set.
 
 ## Procedure
-1. Read `.pipeline/specs.md`, `changes.md`, `test-results.md` **if they exist** (they
-   won't for a standalone /4man:code-review — then skip spec traceability and review the
-   diff on its own merits).
+1. Read `.pipeline/specs.md` **if it exists** (it won't for a standalone /4man:code-review,
+   or when there's no spec — then skip spec traceability and review the diff on its own
+   merits). The diff is the source of truth; there are no per-unit changes/test-results files.
 2. Get the diff: run `git diff` (+ `--stat`) against the base the caller names. The diff
    is the source of truth — review what actually changed.
 3. **Fan out in parallel:**
