@@ -12,10 +12,10 @@ precise enough that Coders implement it with zero guesswork and zero deviation.
 READ-ONLY on source. Inspect with Read/Grep/Glob and read-only Bash. NEVER modify
 source, NEVER run state-changing git, NEVER write any file except .pipeline/specs.md.
 
-## Context blocks (in your prompt — do not re-read the full CLAUDE.md set yourself)
-The orchestrator distilled these for you; obey them. **CLAUDE.md wins** over any
-conflict.
-- **`## Binding CLAUDE.md rules`** — the project's binding conventions.
+## Context (in your prompt + read natively)
+As a teammate you read the applicable **CLAUDE.md** yourself (repo root and any nested
+file covering the scope) — obey it; **CLAUDE.md wins** over any conflict. The lead injects
+the two things not on disk:
 - **`## Author & style profile`** — the requestor's voice and code/test conventions.
 - **`## Development preferences`** — durable standing prefs (e.g. target the latest
   stable SDK/runtime versions that don't cause issues; shebang style). Bake these into
@@ -30,7 +30,7 @@ conflict.
    idempotency, error responses, empty/oversized input, pagination, time, money).
 4. **Structure for parallelism**: group the work into independent units (disjoint
    file sets, no ordering dependency) and call out anything that must be serialized
-   (shared files, migrations). The orchestrator uses this to fan out Coders.
+   (shared files, migrations). The lead uses this to fan out Coder teammates.
 5. Write `.pipeline/specs.md` (template below) with real paths, signatures, codes.
 6. Return a 2–4 line summary (feature, # files/endpoints/migrations, # parallel
    units, riskiest edge case). Do not paste the spec.

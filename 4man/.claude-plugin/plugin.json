@@ -1,7 +1,7 @@
 {
   "name": "4man",
-  "version": "0.5.1",
-  "description": "A four-role dev crew — Planner, parallel Coders & Testers, and a fan-out Reviewer — that builds and reviews features in the requestor's own style. Auto-engages during feature development via the '4man' skill; also exposes /4man:code-review. Hands off through gitignored .pipeline/ files; works on your current branch, or raises a PR when shipping a new feature to an already-hosted repo.",
+  "version": "0.6.0",
+  "description": "A four-role dev crew — Planner, parallel Coders & Testers, and a fan-out Reviewer — that builds and reviews features in the requestor's own style, run as a Claude Code agent team whose teammates coordinate through the shared task list and mailbox. Auto-engages during feature development via the '4man' skill; also exposes /4man:code-review. Needs the experimental agent-teams feature (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS); works on your current branch, or raises a PR when shipping a new feature to an already-hosted repo.",
   "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
   "license": "PolyForm-Noncommercial-1.0.0",
   "homepage": "https://github.com/lzlrd/4man",
