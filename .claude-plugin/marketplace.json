@@ -62,6 +62,12 @@
       "source": "./reload-claude-md",
       "description": "A /reload-claude-md command that re-reads the in-effect CLAUDE.md memory files from disk and re-anchors the session to their current content, so mid-session edits take effect without a restart. Claude Code loads CLAUDE.md only at session start and has no native reload; this fills that gap. Read-only and user-invoked.",
       "category": "productivity"
+    },
+    {
+      "name": "export-skills",
+      "source": "./export-skills",
+      "description": "Deduce which locally-installed Claude Code skills can run in Claude Desktop / claude.ai and package the qualifiers into upload-ready zips. Inventories plugin and personal skills correctly (latest version, symlinks resolved, no marketplace dupes), classifies each against Desktop's sandbox and MCP list, and curates clean zips with SKILL.md at every folder root. Lenient by default; pass --strict for a zero-code-execution reading. User-invoked as /export-skills.",
+      "category": "productivity"
     }
   ]
 }
