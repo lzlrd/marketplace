@@ -1,0 +1,10 @@
+{
+  "name": "platform-docs",
+  "version": "0.1.0",
+  "description": "Grounds platform-API answers in live official documentation — Apple docs, Microsoft Learn, and Google's developer knowledge base — when developing native applications for macOS, iOS, iPadOS, watchOS, tvOS, visionOS, Windows, or Android. Auto-engages via the 'platform-docs' skill whenever platform SDK code, OS APIs, or store-submission questions come up; MCP-first, with a WebFetch/WebSearch fallback when a platform's docs MCP isn't connected.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/platform-docs",
+  "repository": "https://github.com/lzlrd/marketplace",
+  "keywords": ["platform-docs", "apple", "ios", "macos", "windows", "android", "documentation", "mcp"]
+}
