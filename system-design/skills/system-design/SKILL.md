@@ -105,6 +105,12 @@ specific capability argues for running your own. For each non-obvious choice, na
 alternative and why you didn't pick it (e.g. "DynamoDB over Aurora: single-key lookups at high
 write volume, no joins; ad-hoc relational queries would flip this").
 
+Each per-cloud reference file also carries a **live docs via MCP** note: if that cloud's
+documentation/knowledge MCP is connected, use it to confirm fast-moving facts — recent renames,
+current quotas, a newly shipped service — before finalizing a choice, the same MCP-first pattern
+`prompt-engineering` uses against NotebookLM. Fall back to the cheat-sheet silently when the MCP
+isn't connected or errors; never block a design on it.
+
 The default picks at a glance — the per-cloud files carry the "reach for instead when…" reasoning:
 
 | Need | AWS | Azure | Google Cloud | Cloudflare |

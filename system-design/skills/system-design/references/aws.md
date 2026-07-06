@@ -11,6 +11,14 @@ DynamoDB's single-digit-ms at any scale; the most mature serverless ecosystem (L
 Functions + EventBridge); Aurora DSQL for active-active multi-Region SQL; the largest Region
 footprint and marketplace.
 
+## Live docs via MCP
+
+If the `aws-knowledge` MCP is connected (AWS's official managed docs/knowledge server, no auth
+required — current documentation, code samples, and regional service/CloudFormation-resource
+availability), use it to confirm fast-moving facts before finalizing a choice — a new instance
+family, a service's current Region availability, a recently-raised limit. Not connected or it
+errors: fall back to this cheat-sheet silently.
+
 ## Compute
 
 | Service | Use when |

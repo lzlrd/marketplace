@@ -11,6 +11,14 @@ horizontally scalable *strongly consistent* relational; Kubernetes provenance (G
 data/ML/Gemini stack. Naming watch: Cloud Functions → **Cloud Run functions**; the Vertex AI agent
 stack is being rebranded **Gemini Enterprise Agent Platform** (2026) — docs still say Vertex AI.
 
+## Live docs via MCP
+
+If the `google-dev-knowledge` MCP is connected (tools `search_documents` / `answer_query` /
+`get_documents`, covering cloud.google.com among other Google properties), use it to confirm
+fast-moving facts before finalizing a choice — recent renames, current quotas/limits, or a
+service's latest tier — rather than trusting this cheat-sheet alone. Not connected or it errors:
+fall back to the table below silently, it's still the right shape of answer.
+
 ## Compute
 
 | Service | Use when |

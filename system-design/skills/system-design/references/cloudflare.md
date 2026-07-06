@@ -25,6 +25,16 @@ latest write. Recent renames: **AutoRAG → AI Search** · **Magic WAN → Cloud
 keeps its name). **Pages** is converging into Workers — build new full-stack projects on Workers with
 Static Assets.
 
+## Live docs via MCP
+
+If a Cloudflare MCP is connected (`cloudflare-docs`, or the `cloudflare-api`/`bindings`/
+`observability` servers — several expose the same `search_cloudflare_documentation` tool), use it
+to confirm fast-moving facts before finalizing a choice — Cloudflare ships new edge primitives and
+renames existing ones often (see the naming watch above). Not connected or it errors: fall back to
+this cheat-sheet silently. The bindings/builds/observability servers otherwise operate
+already-provisioned resources, which is out of scope for a design skill — reach for the docs-search
+tool, not those.
+
 ## Compute
 
 | Service | Use when |

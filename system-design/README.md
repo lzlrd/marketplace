@@ -72,6 +72,11 @@ and five consistency levels, Pub/Sub covering queue + fan-out + stream in one se
 anycast load balancer vs a regional one, Cloudflare's edge-first model with no VMs or managed event
 bus: differences that change the design).
 
+Where a documentation MCP for the target cloud is connected — Google's dev-knowledge server, the
+official Azure and AWS MCP servers, Cloudflare's docs server — the skill checks it for fast-moving
+facts (new services, renames, current limits) alongside the bundled cheat-sheets, and falls back to
+them quietly when no MCP is connected.
+
 ## Structure
 
 ```
