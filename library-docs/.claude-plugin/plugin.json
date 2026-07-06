@@ -1,0 +1,10 @@
+{
+  "name": "library-docs",
+  "version": "0.1.0",
+  "description": "Fetch current, version-accurate documentation for any third-party library, framework, SDK, API, or CLI tool via the Context7 MCP server before answering questions about it, falling back to a web fetch/search when Context7 isn't connected. Auto-engages via the 'library-docs' skill whenever a question is anchored to a specific library or framework, even one you already know well, since a library's docs move faster than training data.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/library-docs",
+  "repository": "https://github.com/lzlrd/marketplace",
+  "keywords": ["library-docs", "context7", "documentation", "mcp", "framework", "sdk", "api", "cli"]
+}
