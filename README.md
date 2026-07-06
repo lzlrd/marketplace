@@ -14,7 +14,7 @@ Diab Neiroukh's Claude Code plugins in one place. Add the marketplace once, then
 | Plugin | What it does |
 | --- | --- |
 | [`mempalace-hooks`](./mempalace-hooks) | Wires the mempalace memory server into Claude Code: two directive hooks, a managed `CLAUDE.md` block, a session diary, and a `/remember` handoff. Durable cross-session memory over the mempalace MCP, or the `mempalace` CLI when the MCP isn't connected. |
-| [`system-design`](./system-design) | Cloud-agnostic system design across AWS, Azure, and Google Cloud, grounded in the Well-Architected frameworks. |
+| [`system-design`](./system-design) | Cloud-agnostic system design across AWS, Azure, Cloudflare, and Google Cloud, grounded in the Well-Architected frameworks. |
 | [`4man`](./4man) | A four-role dev crew: a Planner, parallel Coders and Testers, and a fan-out Reviewer. |
 | [`realfavicon-mcp`](./realfavicon-mcp) | Generate, check, and track favicons via RealFaviconGenerator, over MCP. |
 | [`offshore`](./offshore) | Run a local abliterated model to answer prompts Claude refuses, over MCP. |
