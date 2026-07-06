@@ -18,7 +18,7 @@
     {
       "name": "system-design",
       "source": "./system-design",
-      "description": "Cloud-agnostic system design across AWS, Azure, and Google Cloud: a six-step Well-Architected loop. Auto-engages for architecture and service-selection work.",
+      "description": "Cloud-agnostic system design across AWS, Azure, Google Cloud, and Cloudflare: a six-step Well-Architected loop, grounded in each cloud's live documentation MCP when connected. Auto-engages for architecture and service-selection work.",
       "category": "workflow"
     },
     {
@@ -68,6 +68,24 @@
       "source": "./export-skills",
       "description": "Deduce which locally-installed Claude Code skills can run in Claude Desktop / claude.ai and package the qualifiers into upload-ready zips. Inventories plugin and personal skills correctly (latest version, symlinks resolved, no marketplace dupes), classifies each against Desktop's sandbox and MCP list, and curates clean zips with SKILL.md at every folder root. Lenient by default; pass --strict for a zero-code-execution reading. User-invoked as /export-skills.",
       "category": "productivity"
+    },
+    {
+      "name": "platform-docs",
+      "source": "./platform-docs",
+      "description": "Grounds platform-API answers in live official documentation — Apple docs, Microsoft Learn, and Google's developer knowledge base — when building for macOS, iOS, iPadOS, watchOS, tvOS, visionOS, Windows, or Android. Auto-engages for native platform-SDK and OS-API work.",
+      "category": "workflow"
+    },
+    {
+      "name": "library-docs",
+      "source": "./library-docs",
+      "description": "Fetches current, version-accurate documentation for any third-party library, framework, SDK, or CLI tool via Context7, with a web fallback when it isn't connected. Auto-engages whenever a question is anchored to a specific library or framework.",
+      "category": "workflow"
+    },
+    {
+      "name": "semver",
+      "source": "./semver",
+      "description": "Semantic Versioning 2.0.0 decision procedure: classifies a change as MAJOR, MINOR, or PATCH and produces the exact next version number, grounded in a bundled distilled copy of the spec. Auto-engages whenever a version is being bumped or a release is being cut.",
+      "category": "workflow"
     }
   ]
 }

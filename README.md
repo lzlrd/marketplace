@@ -23,3 +23,6 @@ Diab Neiroukh's Claude Code plugins in one place. Add the marketplace once, then
 | [`fableplan`](https://github.com/lzlrd/fableplan/tree/main/plugins/fableplan) | Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup. Toggle with `/fableplan`. |
 | [`reload-claude-md`](./reload-claude-md) | Re-read your edited `CLAUDE.md` files from disk and re-anchor the running session to their current content, so mid-session edits take effect without a restart. Read-only; invoke with `/reload-claude-md`. |
 | [`export-skills`](./export-skills) | Work out which locally-installed skills can run in Claude Desktop / claude.ai, then package the qualifiers into upload-ready zips. Lenient by default; `--strict` drops the sandbox skills. Invoke with `/export-skills`. |
+| [`platform-docs`](./platform-docs) | Ground platform-API answers in live official docs — Apple docs, Microsoft Learn, and Google's developer knowledge base — when building for macOS, iOS, any Apple platform, Windows, or Android. |
+| [`library-docs`](./library-docs) | Fetch current, version-accurate docs for any library, framework, SDK, or CLI tool via Context7, with a web fallback when it isn't connected. |
+| [`semver`](./semver) | Decide the next version number under Semantic Versioning 2.0.0 — MAJOR, MINOR, or PATCH — grounded in a bundled copy of the spec. |
