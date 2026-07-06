@@ -1,0 +1,10 @@
+{
+  "name": "semver",
+  "version": "0.1.0",
+  "description": "Semantic Versioning 2.0.0 decision procedure: classifies a change as MAJOR/MINOR/PATCH and produces the exact next version number, with pre-release/build-metadata handling and the pre-1.0.0 (0.y.z) special case. Grounded in a bundled distilled copy of the semver.org spec, so it works fully offline. Auto-engages via the 'semver' skill whenever a version is being bumped or a release/tag/CHANGELOG entry is being decided; slash-available as /semver:semver.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/semver",
+  "repository": "https://github.com/lzlrd/marketplace",
+  "keywords": ["semver", "semantic-versioning", "versioning", "release", "changelog", "version-bump"]
+}
