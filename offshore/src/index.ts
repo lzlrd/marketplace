@@ -21,7 +21,7 @@ const client = new OffshoreClient(config);
 
 const server = new McpServer({
   name: "offshore",
-  version: "0.1.0",
+  version: "1.0.0",
 });
 
 /** Wrap any thrown error into an MCP tool error result. */

@@ -1,6 +1,6 @@
 {
     "name": "offshore",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "An MCP server which allows you to utilise an abliterated model locally for questions that Claude will not answer.",
     "type": "module",
     "bin": {

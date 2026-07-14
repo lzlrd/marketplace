@@ -34,7 +34,7 @@ Offshore ships in the `lzlrd` marketplace:
 /plugin install offshore@lzlrd
 ```
 
-There is no build step. Claude Code runs the server from source with [Bun](https://bun.sh), which must be on your `PATH`. Bun installs the dependencies on first launch from the committed `bun.lock`.
+There is no build step. Claude Code runs the server from source with [Bun](https://bun.sh), which must be on your `PATH`. Each launch runs `bun install --frozen-lockfile` from the committed `bun.lock` first — fast once the packages are cached, but it does need the dependencies fetched at least once (so the first launch, or a cold machine, needs network access).
 
 The plugin reads `~/.offshore/config.toml` exactly like a manual run. See [Configuration](#configuration).
 
@@ -121,7 +121,7 @@ Quick overrides without editing the TOML:
 | `OFFSHORE_API_KEY`       | Fallback API key when no provider `env_key` is set.       |
 | `OFFSHORE_TEMPERATURE`   | Sampling temperature. Set empty to omit it from requests. |
 | `OFFSHORE_MAX_TOKENS`    | Cap on generated tokens.                                  |
-| `OFFSHORE_TIMEOUT_MS`    | Idle timeout between streamed chunks, ms (default `120000`).|
+| `OFFSHORE_TIMEOUT_MS`    | Idle timeout between streamed chunks for `ask_abliterated`, ms (default `120000`); for non-streaming calls like `list_models` it bounds the whole request. |
 | `OFFSHORE_SYSTEM_PROMPT` | Override the unrestricted framing.                        |
 
 ## MCP Client Configuration

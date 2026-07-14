@@ -13,18 +13,14 @@ temperature = 0.3   # set OFFSHORE_TEMPERATURE="" to omit temperature entirely
 # system_prompt = "..."   # override the built-in unrestricted framing
 
 # --- Providers -------------------------------------------------------------
-# Built-in providers (ollama, lmstudio, vllm) already exist; redefine a block
-# only to override its fields. Add new blocks for anything else.
-
-[model_providers.ollama]
-name = "Ollama"
-base_url = "http://localhost:11434/v1"
-wire_api = "chat"            # "chat" (Chat Completions) or "responses" (Responses API)
-
-[model_providers.lmstudio]
-name = "LM Studio"
-base_url = "http://localhost:1234/v1"
-wire_api = "chat"
+# The built-in providers (ollama, lmstudio, vllm) already exist with sensible
+# defaults, so you don't need to declare them here. Add a [model_providers.<id>]
+# block only to define a NEW provider, or to OVERRIDE a built-in's fields — for
+# example, to point ollama at a non-default host:
+#
+#   [model_providers.ollama]
+#   base_url = "http://gpu-box.local:11434/v1"
+#   wire_api = "chat"          # "chat" (Chat Completions) or "responses" (Responses API)
 
 # Example: a remote OpenAI-compatible gateway with auth + custom headers.
 [model_providers.gateway]

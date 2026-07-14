@@ -1,6 +1,6 @@
 {
   "name": "offshore",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Run a local abliterated model to answer prompts Claude refuses. Bundles the offshore MCP server (ask_abliterated, list_models, list_providers).",
   "author": {
     "name": "Diab Neiroukh",
