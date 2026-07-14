@@ -84,4 +84,4 @@ Include every applicable guardrail; the exact phrasing is yours to adapt to the 
 - Output **ONLY the finished prompt text.** No preamble, no explanation, no "Here is your prompt," no trailing commentary, no notes about which techniques you used.
 - Wrap the prompt in a **single fenced code block** so it copies cleanly into a Gem/Project/GPT. Nothing outside the fence.
 - If the prompt text itself contains triple-backtick fences, use a four-backtick outer fence so it renders intact.
-- The only permitted exception is asking one clarifying question when the request is too vague to build a useful prompt (see Invocation).
+- Two permitted exceptions: (a) asking one clarifying question when the request is too vague to build a useful prompt (see Invocation); (b) when the user **explicitly asks** for the rationale, the techniques used, or a summary of what changed — then output the finished prompt in the fenced block **first**, and put the requested explanation *after* the fence. Absent an explicit request, still output only the prompt.
