@@ -94,15 +94,17 @@ def main():
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    # One zip per skill (claude.ai uploads a single skill at a time). Plugin
-    # skills get a plugin-prefixed filename so two plugins' same-named skills do
-    # not collide on disk; the folder inside the zip stays the bare skill name so
-    # claude.ai names the upload correctly.
+    # One zip per skill (claude.ai uploads a single skill at a time). Plugin skills
+    # get a repo-and-plugin-prefixed filename so same-named skills from different
+    # marketplaces (or two plugins) don't collide on disk; the folder inside the zip
+    # stays the bare skill name so claude.ai names the upload correctly.
     report = []
-    for s in sorted(manifest["skills"], key=lambda x: (x.get("plugin") or "", x["name"])):
+    for s in sorted(manifest["skills"], key=lambda x: (x.get("repo") or "", x.get("plugin") or "", x["name"])):
         name = s["name"]
-        plugin = None if s.get("kind") == "personal" else s.get("plugin")
-        stem = f"{plugin}-{name}" if plugin else name
+        if s.get("kind") == "personal":
+            stem = name
+        else:
+            stem = "-".join(p for p in (s.get("repo"), s.get("plugin"), name) if p)
         zip_path = out / f"{stem}.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             added = add_skill(zf, s["skill_dir"], name)
@@ -114,15 +116,20 @@ def main():
         print(f"## {zip_path.name}  ({name}, {n_files} file{'s' if n_files != 1 else ''})")
         for arc, size in biggest:
             print(f"   {size:>9,} B  {arc}")
+        # Credential-ish names are an advisory heuristic (a file literally named
+        # "token-helper.md" is usually benign), so warn but don't fail the run on them.
         for member in secrets:
-            ok = False
             print(f"   ! credential-ish member, review before upload: {member}")
+        # Structural problems (missing root SKILL.md, over the file limit) are real
+        # failures — these gate the exit code.
         for issue in issues:
             ok = False
             print(f"   ! {issue}")
         print()
+    if any(r[3][1] for r in report):
+        print("Note: credential-ish filenames were flagged above — eyeball them, but they don't block upload.")
     print("All zips passed the structural checks."
-          if ok else "Review the ! warnings above before uploading.")
+          if ok else "Review the ! structural warnings above before uploading.")
     return 0 if ok else 1
 
 

@@ -15,8 +15,23 @@ HOME = Path.home()
 CACHE = HOME / ".claude" / "plugins" / "cache"
 PERSONAL_ROOTS = [HOME / ".claude" / "skills", HOME / ".agents" / "skills"]
 SETTINGS = HOME / ".claude" / "settings.json"
-DESKTOP_CONFIG = (HOME / "Library" / "Application Support" / "Claude"
-                  / "claude_desktop_config.json")
+
+
+def _desktop_config_path():
+    """Claude Desktop's config lives in a per-OS location, so don't hardcode macOS —
+    on Linux/Windows the macOS path is absent and every MCP-dependent skill would be
+    misjudged as having no Desktop MCPs available."""
+    if sys.platform == "darwin":
+        return (HOME / "Library" / "Application Support" / "Claude"
+                / "claude_desktop_config.json")
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA")
+        root = Path(base) if base else HOME / "AppData" / "Roaming"
+        return root / "Claude" / "claude_desktop_config.json"
+    return HOME / ".config" / "Claude" / "claude_desktop_config.json"  # Linux / other.
+
+
+DESKTOP_CONFIG = _desktop_config_path()
 
 # Resource dirs worth shipping (kept in sync with package.py's KEEP_DIRS).
 RESOURCE_DIRS = {"references", "reference", "scripts", "templates", "assets",
@@ -118,6 +133,7 @@ def inventory_personal():
                 "plugin_version": None, "name": entry.name,
                 "skill_md": str(skill_md), "skill_dir": str(real),
                 "resource_dirs": resource_dirs_of(real),
+                "enabled": True,  # Personal skills are always the user's own — keep the schema uniform.
             })
     return records
 
@@ -148,6 +164,11 @@ def main():
     enabled = enabled_plugin_names()
     for rec in plugins:
         rec["enabled"] = (rec["plugin"] in enabled) if enabled else None
+    # A cached-but-disabled plugin isn't one of "the user's skills", so drop it from the
+    # export work-list. Only drop when enabledPlugins is actually known — with enabled==None
+    # we can't tell, so keep everything rather than guess. Report the drop, never silently.
+    dropped = [r for r in plugins if r["enabled"] is False]
+    plugins = [r for r in plugins if r["enabled"] is not False]
     servers, cfg_found = desktop_mcp_servers()
     out = {
         "desktop_mcp_servers": servers,
@@ -158,9 +179,10 @@ def main():
     }
     json.dump(out, sys.stdout, indent=2)
     sys.stdout.write("\n")
+    dropped_note = f", {len(dropped)} disabled-plugin skills skipped" if dropped else ""
     print(f"[inventory] {len(plugins)} plugin skills, {len(personal)} personal "
           f"skills, {len(servers)} Desktop MCP servers "
-          f"({'config found' if cfg_found else 'NO desktop config'}).",
+          f"({'config found' if cfg_found else 'NO desktop config'}){dropped_note}.",
           file=sys.stderr)
 
 

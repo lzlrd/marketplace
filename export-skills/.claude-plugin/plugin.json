@@ -1,6 +1,6 @@
 {
   "name": "export-skills",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Deduce which locally-installed Claude Code skills can run in Claude Desktop / claude.ai and package the qualifiers into upload-ready zips. Inventories plugin and personal skills (latest version, symlinks resolved, no marketplace dupes), classifies each against Desktop's code-execution sandbox and MCP list, and curates one zip per plugin (or per personal skill) with SKILL.md at every folder root. Lenient by default (counts the sandbox as available, the way the built-in pdf/docx skills work); pass --strict for a zero-code-execution reading. User-invoked as /export-skills [--strict].",
   "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
   "license": "PolyForm-Noncommercial-1.0.0",

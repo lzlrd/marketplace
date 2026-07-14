@@ -46,13 +46,20 @@ included, no marketplace duplicates), personal skills (resolving the `~/.claude/
 read from the user's `claude_desktop_config.json`. That MCP list is the whole basis for criterion 3,
 and it is per-user, so never assume it.
 
-### 2. Classify — one reviewer per skill
+### 2. Classify — cluster first, then fan out only the ambiguous ones
 
-Fan out one sub-agent per skill, in parallel. Hand each its `SKILL.md` path and the Desktop MCP list,
-and have it return the structured verdict defined in `references/process.md` (verdict, category,
-requires_local_shell, cc_only_tools, mcp_needed, what_it_does, reason). A skill qualifies only if all
-three criteria hold: it runs in Desktop, it is relevant to Desktop, and any MCP it needs is in the
-Desktop list (or it degrades gracefully without it).
+Don't blindly spawn one sub-agent per skill — a real install is dozens (often 80+), and most are
+obvious. Classify inline the ones you can decide from `SKILL.md` alone: pure-prompt/artifact skills
+clearly run in Desktop; skills whose only tools are Claude-Code-dev tooling (plugin-dev, hooks,
+settings) clearly don't. Then **cluster the rest by shared dependency** — group skills that need the
+same MCP or the same local-shell capability — and classify each cluster once (the
+**identical dependency ⇒ identical verdict** rule in Normalize makes this sound). Only fan out
+sub-agents for the genuinely borderline skills that survive that pass, and **cap concurrency**
+(≈8 at a time) so a large install doesn't spawn a hundred agents. Each sub-agent gets its `SKILL.md`
+path and the Desktop MCP list, and returns the structured verdict from `references/process.md`
+(verdict, category, requires_local_shell, cc_only_tools, mcp_needed, what_it_does, reason). A skill
+qualifies only if all three criteria hold: it runs in Desktop, it is relevant to Desktop, and any
+MCP it needs is in the Desktop list (or it degrades gracefully without it).
 
 ### 3. Normalize — your judgment
 

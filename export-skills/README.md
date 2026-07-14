@@ -23,9 +23,10 @@ differs between the two. There is no `--lenient` flag; lenient is the default.
 
 - A tiered report: ready as-is, needs the sandbox, needs a named Desktop MCP, works but
   output-limited, and the excluded set grouped by reason.
-- Upload-ready zips under an output folder: one per skill (plugin skills named `<plugin>-<skill>.zip`,
-  personal skills `<skill>.zip`), each with `SKILL.md` at the root and kept under claude.ai's 200-file
-  limit. Upload each zip on its own.
+- Upload-ready zips under an output folder: one per skill (plugin skills named
+  `<repo>-<plugin>-<skill>.zip`, personal skills `<skill>.zip`), each with `SKILL.md` at the root.
+  The packager **flags** any skill that exceeds claude.ai's 200-file limit so you can trim it before
+  uploading — it doesn't silently drop files to fit. Upload each zip on its own.
 
 ## How it works
 
