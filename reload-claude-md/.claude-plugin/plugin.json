@@ -1,6 +1,6 @@
 {
   "name": "reload-claude-md",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Re-read the CLAUDE.md memory files in effect and re-anchor the running session to their current on-disk content, so edits made mid-session take effect without a restart. Claude Code loads CLAUDE.md only at session start and has no native reload (only /compact re-injects the project-root file, with side effects); this fills that gap. Reads the user, project-root, nested, and local CLAUDE.md files plus their @imports, reports what changed since the session began, and adopts the new version. Read-only; user-invoked as /reload-claude-md [path].",
   "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
   "license": "PolyForm-Noncommercial-1.0.0",
