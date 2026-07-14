@@ -43,9 +43,9 @@ and is current as of today, not as of training.
 | Windows | `references/windows.md` | `mcp__microsoft-learn__*` |
 | Android | `references/android.md` | `mcp__google-dev-knowledge__*` |
 
-All three MCPs are checked for connectivity before use, silently — never tell the user an MCP is
-missing as though it blocks the answer. If a platform's MCP isn't connected, each reference file
-names the fallback (WebFetch/WebSearch against the vendor's own docs site).
+Reach for the platform's MCP first; if its tools aren't available in this session, fall back
+silently — never tell the user an MCP is missing as though it blocks the answer. Each reference
+file names the fallback (WebFetch/WebSearch against the vendor's own docs site).
 
 ## Common mistakes to avoid
 
