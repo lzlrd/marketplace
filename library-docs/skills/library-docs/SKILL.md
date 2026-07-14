@@ -35,25 +35,34 @@ adds a detour.
 ## Cross-reference
 
 For OS/platform SDK questions (Apple/macOS/iOS, Windows, Android) reach for the sibling
-`platform-docs` skill instead — it covers the platform-vendor doc MCPs specifically. This skill is
-for third-party libraries and frameworks generally, on any platform.
+`platform-docs` skill instead — it covers the platform-vendor doc MCPs specifically. For the
+**Anthropic/Claude SDK (or any LLM-provider SDK)** — model IDs, pricing, the Messages/tool-use API
+surface — defer to the `claude-api` skill, which is authoritative there; don't route those to
+Context7 or the web. This skill is for third-party libraries and frameworks generally, on any
+platform.
 
 ## Procedure (MCP-first, web fallback)
 
-1. **Context7 connected** (`mcp__claude_ai_Context7__resolve-library-id` is available):
+1. **Context7 connected** (any Context7 MCP is available — the claude.ai connector exposes
+   `mcp__claude_ai_Context7__resolve-library-id` / `query-docs`; a self-hosted or differently-named
+   Context7 server exposes the equivalent `resolve-library-id` / `get-library-docs` pair. Match on
+   the tool suffix, not the exact server name, so a non-claude.ai Context7 still counts as present):
    - Call `resolve-library-id` with `libraryName` (the official name, e.g. "Next.js" not "nextjs")
      and `query` (what the user is trying to do) to get the Context7-compatible library ID. Skip
      this step if the user already gave an exact ID in `/org/project` or `/org/project/version`
      form.
-   - Call `query-docs` with that `libraryId` and a `query` scoped to **one concept** (e.g. "App
-     Router middleware config", not "routing and auth and caching"). Split multi-concept questions
-     into separate calls — up to three per question.
+   - Call the docs tool (`query-docs`, or `get-library-docs` on the non-claude.ai variant) with that
+     `libraryId` and a `query` scoped to **one concept** (e.g. "App Router middleware config", not
+     "routing and auth and caching"). Split multi-concept questions into separate calls — up to
+     three per question.
    - Ground your answer in the returned docs. Don't skip straight to training knowledge just
      because you're confident — that's the exact failure mode this skill exists to prevent.
 2. **Context7 unavailable or it errors** (not connected, disconnected mid-session, or the library
    isn't indexed): fall back silently, in order —
-   - WebFetch the library's official docs site or README/CHANGELOG (prefer the canonical source).
-   - WebSearch for the specific API/version question if there's no obvious canonical doc URL.
+   - Fetch the library's official docs site or README/CHANGELOG (prefer the canonical source).
+   - Otherwise **search the web** for the specific API/version question — use your preferred
+     web-search path (the perplexity MCP when it's connected, per the global preference, else
+     WebSearch) if there's no obvious canonical doc URL.
    - Only if both come up empty, answer from training knowledge and say so explicitly — flag it as
      possibly stale rather than presenting it with false confidence.
    Never surface the MCP's absence as a blocker to the user; just get the answer another way.
