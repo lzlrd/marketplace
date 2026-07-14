@@ -59,8 +59,8 @@ bump anything on their own (they ride along with whatever real change triggered 
 | Deprecated something *without removing it yet* | **MINOR** | Still works; the removal itself is the future MAJOR |
 | Fixed a bug so behavior now matches the documented/intended contract | **PATCH** | Callers relying on the *correct* behavior are unaffected |
 | Fixed a bug whose old (wrong) behavior callers had come to depend on | **MAJOR** | The fix itself is now the breaking change, however unwelcome |
-| Updated a dependency with no public-API effect | **PATCH** if the update was to fix a bug, **MINOR** if it pulled in new functionality you now expose (spec FAQ) | Same rule applied one level down |
-| Perf improvement, refactor, internal rename, comment/doc/test-only change | **no bump on its own** | Doesn't touch the public API |
+| Updated a dependency | **PATCH** if the update just fixes a bug behind your API, **MINOR** if it pulled in new functionality you now expose, **MAJOR** if it changes your own public API (spec FAQ) | Classify by the effect on *your* public API, not the dependency's |
+| Perf improvement, refactor, internal rename, comment/doc/test-only change | **no bump on its own** — though spec item 7 lets you *optionally* take a **MINOR** for substantial internal improvements | Doesn't touch the public API, so a bump is never required |
 
 When two rows apply to the same release (e.g. a feature *and* a fix), take the **highest** bump that
 applies — MAJOR beats MINOR beats PATCH. Reset the lower components to zero when you bump a higher
