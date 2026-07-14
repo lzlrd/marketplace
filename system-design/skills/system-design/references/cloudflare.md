@@ -27,12 +27,13 @@ Static Assets.
 
 ## Live docs via MCP
 
-If a Cloudflare MCP is connected (`cloudflare-docs`, or the `cloudflare-api`/`bindings`/
-`observability` servers — several expose the same `search_cloudflare_documentation` tool), use it
-to confirm fast-moving facts before finalizing a choice — Cloudflare ships new edge primitives and
-renames existing ones often (see the naming watch above). Not connected or it errors: fall back to
+If a Cloudflare MCP is connected, use it to confirm fast-moving facts before finalizing a choice —
+Cloudflare ships new edge primitives and renames existing ones often (see the naming watch above).
+The `search_cloudflare_documentation` tool is exposed by the `cloudflare-docs`, `cloudflare-bindings`,
+and `cloudflare-observability` servers; the `cloudflare-api` server exposes its own `search` + `docs`
+tools instead (and `cloudflare-builds` has no docs tool). Not connected or it errors: fall back to
 this cheat-sheet silently. The bindings/builds/observability servers otherwise operate
-already-provisioned resources, which is out of scope for a design skill — reach for the docs-search
+already-provisioned resources, which is out of scope for a design skill — reach for a docs-search
 tool, not those.
 
 ## Compute

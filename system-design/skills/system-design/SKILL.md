@@ -137,7 +137,7 @@ The default picks at a glance — the per-cloud files carry the "reach for inste
 | Warehouse / analytics | Redshift / Athena | Microsoft Fabric | BigQuery | R2 SQL |
 | Observability | CloudWatch + X-Ray | Azure Monitor + App Insights | Cloud Monitoring / Logging / Trace | Workers Observability + Logpush |
 | Workload identity | IAM roles | Entra ID managed identities | IAM service accounts | Service bindings |
-| End-user identity | Cognito | Entra External ID | Identity Platform | Access (ZTNA) |
+| End-user identity (CIAM) | Cognito | Entra External ID | Identity Platform | — (no consumer CIAM; Access = ZTNA for internal apps) |
 | Secrets / keys | Secrets Manager / KMS | Key Vault | Secret Manager / Cloud KMS | Secrets Store |
 | LLM (managed models) | Bedrock | Microsoft Foundry (Azure OpenAI) | Vertex AI (Gemini) | Workers AI · AI Gateway |
 | AI agents at scale | Bedrock AgentCore | Foundry Agent Service | Agent Engine + ADK | Agents SDK |
@@ -200,8 +200,9 @@ Deliver a written design using the structure below.
 ## Cost notes & open questions
 ```
 
-If a diagram tool (e.g. an ai-drawio MCP) is connected, offer to render the architecture — a picture
-carries an architecture better than prose. Otherwise describe it clearly enough to draw by hand.
+If a diagram tool (e.g. the `drawio-aws` MCP) is connected, offer to render the architecture — a
+picture carries an architecture better than prose. Otherwise describe it clearly enough to draw by
+hand.
 
 ## Common mistakes to avoid
 

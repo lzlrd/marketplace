@@ -18,12 +18,13 @@ Fabric**, not Synapse.
 
 ## Live docs via MCP
 
-If the `azure` MCP is connected (Azure MCP Server — 40+ service namespaces incl. a
-Well-Architected/Advisor one, run via `bunx -y @azure/mcp@latest`), use it to confirm current
-service facts before finalizing a choice — Azure's naming churns faster than most (see the renames
-above). Most of its tools need `az login` or service-principal credentials first; if a call fails
-on auth, don't block the design on it — fall back to this cheat-sheet (or a `learn.microsoft.com`
-fetch) silently.
+Two docs paths. Prefer the **`microsoft-learn`** MCP (`microsoft_docs_search` / `microsoft_docs_fetch`
+— no `az login` needed) to confirm current Azure service facts before finalizing a choice; Azure's
+naming churns faster than most (see the renames above). The **`azure`** MCP (Azure MCP Server — 40+
+service namespaces incl. a Well-Architected/Advisor one, run via `bunx -y @azure/mcp@latest`) adds
+resource-aware tools, but most of them need `az login` or service-principal credentials first; if a
+call fails on auth, don't block the design on it — fall back to `microsoft-learn`, this cheat-sheet,
+or a `learn.microsoft.com` fetch silently.
 
 ## Compute
 
