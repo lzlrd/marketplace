@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { parse } from 'node-html-parser';
+import { assertSafeFetchUrl } from '../net.js';
 import {
   checkFavicon, reportHasErrors, reportHasWarnings,
   type FaviconReport, type CheckerMessage,
@@ -75,7 +76,7 @@ export function registerCheckFavicon(server: McpServer): void {
     },
     async ({ url, include_icon_data }) => {
       try {
-        if (!/^https?:\/\//i.test(url)) throw new Error(`refusing non-http(s) URL: ${url}`);
+        await assertSafeFetchUrl(url);
         const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
         if (!res.ok) throw new Error(`failed to fetch ${url} (${res.status})`);
         const html = await res.text();

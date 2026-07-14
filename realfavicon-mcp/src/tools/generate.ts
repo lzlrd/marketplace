@@ -1,10 +1,11 @@
 import { mkdir, writeFile, access, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, extname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getNodeImageAdapter, loadAndConvertToSvg } from '@realfavicongenerator/image-adapter-node';
+import { assertSafeFetchUrl } from '../net.js';
 import {
   generateFaviconFiles, generateFaviconHtml, initFaviconIconSettings,
   type FaviconSettings, type MasterIcon,
@@ -34,9 +35,17 @@ const outputSchema = {
 
 // Downloads a URL to a temp file and returns the path. Caller must unlink it.
 async function downloadToTemp(url: string): Promise<string> {
+  await assertSafeFetchUrl(url);
   const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`failed to download source (${res.status})`);
-  const tmp = join(tmpdir(), `rfg-src-${randomUUID()}`);
+  // Preserve the source's file extension. Downstream, loadAndConvertToSvg dispatches on a
+  // `.svg` suffix; an extensionless temp file makes it rasterise an SVG master instead of
+  // keeping it as vector. Fall back to the Content-Type when the URL path has no extension.
+  let ext = extname(new URL(url).pathname).toLowerCase();
+  if (!ext && res.headers.get('content-type')?.split(';')[0]?.trim() === 'image/svg+xml') {
+    ext = '.svg';
+  }
+  const tmp = join(tmpdir(), `rfg-src-${randomUUID()}${ext}`);
   await writeFile(tmp, Buffer.from(await res.arrayBuffer()));
   return tmp;
 }
@@ -100,7 +109,10 @@ export function registerGenerateFavicon(server: McpServer): void {
         // 4. Build settings via init helper; only override caller-supplied fields.
         const iconSettings = initFaviconIconSettings();
         if (app_name !== undefined) iconSettings.webAppManifest.name = app_name;
-        iconSettings.webAppManifest.shortName = short_name ?? app_name ?? '';
+        // Only override the library's default shortName when the caller supplied a name to
+        // derive it from; otherwise leave the init default rather than blanking it to ''.
+        const shortName = short_name ?? app_name;
+        if (shortName !== undefined) iconSettings.webAppManifest.shortName = shortName;
         if (theme_color !== undefined) iconSettings.webAppManifest.themeColor = theme_color;
         if (background_color !== undefined) iconSettings.webAppManifest.backgroundColor = background_color;
         if (app_title !== undefined) iconSettings.touch.appTitle = app_title;

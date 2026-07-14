@@ -1,6 +1,6 @@
 {
   "name": "realfavicon-mcp",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "MCP server for RealFaviconGenerator: generate, check, and change-log favicons.",
   "author": "Diab Neiroukh <development@ayoo.by>",
   "license": "PolyForm-Noncommercial-1.0.0",

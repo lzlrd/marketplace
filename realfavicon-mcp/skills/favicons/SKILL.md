@@ -12,7 +12,7 @@ description: >-
   realfavicon_check, realfavicon_changelog) to build a complete favicon and
   app-icon set plus ready-to-paste <head> markup from one master image, audit a
   live page's favicon setup, and track RealFaviconGenerator changes.
-version: 0.1.0
+version: 1.0.0
 ---
 
 # Favicons
@@ -34,9 +34,11 @@ wrap [RealFaviconGenerator](https://realfavicongenerator.net):
 
 In a Claude Code session these appear under the realfavicon-mcp MCP server (the
 tool name may be prefixed, e.g. `mcp__…__realfavicon_generate`). If the
-`realfavicon_*` tools are not available, the realfavicon-mcp plugin/MCP server
-is not connected — tell the user to install it (`/plugin install
-realfavicon-mcp@lzlrd`) rather than hand-writing favicon tags.
+`realfavicon_*` tools are not available even though this skill fired, the plugin
+is installed but its **bundled MCP server didn't start** — check that Bun (>=1.3)
+is on `PATH` and that dependencies fetched, and look at the server's stderr. Only
+if the plugin is genuinely missing, install it (`/plugin install
+realfavicon-mcp@lzlrd`). Either way, don't fall back to hand-writing favicon tags.
 
 ## Core workflow: logo → wired-up favicons
 
