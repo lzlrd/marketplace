@@ -17,15 +17,16 @@ coordinate; your **teammates** — each a full Claude Code session in its own co
 the work, claim tasks off the shared task list, and message each other and you directly.
 Keep your own narration brief; the detail lives in the task list and the teammates' sessions.
 
-## Prerequisite — agent teams must be enabled
+## Prerequisite — agent teams must be enabled (hard requirement)
 4man runs the crew as an agent team, which is **experimental and off by default**. It is
 turned on by the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable (README has the
-one-line setup). Before engaging:
-- **Enabled** (you can spawn teammates) → run the crew as a team, below.
-- **Not enabled** → you cannot form a team. Say so, point the user at the README's enable
-  step, and offer to either (a) proceed once they enable it and restart, or (b) fall back to
-  running the crew yourself with subagents for this one run — planner → coders → testers →
-  reviewer, serialized through your own context. Don't pretend a team formed when it didn't.
+one-line setup). Agent teams are **required** — there is no subagent fallback. Before engaging,
+confirm the feature is on (you can spawn teammates):
+- **Enabled** → run the crew as a team, below.
+- **Not enabled** → **stop.** Do not run the crew, and do not do the work yourself in this
+  session as a substitute. Tell the user 4man needs `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+  in `~/.claude/settings.json` (or project settings) and a restart, point them at the README's
+  enable step, and end there. Don't pretend a team formed when it didn't.
 
 ## Engagement check
 Engage the full crew for real feature work or new-codebase work. For a trivial edit, a
@@ -57,9 +58,11 @@ The crew is a team, not a chain of file hand-offs. What that changes:
   teammates message each other directly (the mailbox) instead of routing everything through
   you. You synthesize; you don't relay every message. This is the capability subagents never
   had — use it for cross-unit wiring, not for work one teammate owns alone.
-- **Don't pin teammate models or effort.** Teammates inherit the lead's effort; run them on the
-  session's model (set **Default teammate model → leader's model** in `/config` if they'd
-  otherwise diverge). The one exception is recovery: a stuck unit may be re-spawned on a more
+- **Don't pin teammate models or effort — with one exception.** Teammates inherit the lead's
+  effort and run on the session's model (set **Default teammate model → leader's model** in
+  `/config` if they'd otherwise diverge). The exception is the **Planner**, which runs at
+  `effort: max` (its own frontmatter sets this) because the spec's quality gates the whole run;
+  everything else inherits. Recovery is the other case: a stuck unit may be re-spawned on a more
   capable model.
 - **Wait for teammates; don't do their work.** The lead's failure mode is starting to implement
   instead of delegating. Spawn the teammates, let them work, synthesize when they report. Steer
@@ -95,13 +98,19 @@ delivers it at your next turn) and triage:
 1. **Gitignore first.** If the repo has no `.gitignore`, create one containing `.pipeline/`.
    If it has one and `.pipeline/` (or `.pipeline`) is not in it, append `.pipeline/`. Do this
    before creating any pipeline files.
-2. Confirm this is a git repo (warn, don't block, on unrelated uncommitted changes). **Record
-   the start commit** (`git rev-parse HEAD`) — the Reviewer (Step 5) and the security pass diff
-   against it in **both** modes, so the verdict covers only this run. Note the **current
-   branch** (`git rev-parse --abbrev-ref HEAD`) and the **default branch**
-   (`git symbolic-ref --short refs/remotes/origin/HEAD`, strip `origin/`; else `main`, then
-   `master`) — call it `<default-branch>`. **If HEAD is detached**, create and switch to
-   `4man/<kebab-slug-of-request>` now, before the mode decision, so commits attach to a real ref.
+2. **Ensure a git repo with at least one commit.** If this isn't a git repo (`git rev-parse
+   --git-dir` fails), run `git init` — this is the new-codebase/bootstrap case. If the repo has
+   **no commits yet** (`git rev-parse HEAD` fails), create an initial commit now (an empty
+   `git commit --allow-empty -m "Initial commit"` in the requestor's style is fine) so the
+   review has a base. Then warn (don't block) on unrelated uncommitted changes. **Record the
+   start commit** (`git rev-parse HEAD`). The Reviewer (Step 5) and the security pass diff
+   against a base that depends on mode: **in-place mode** → the start commit (this run's work);
+   **PR mode** → the merge-base of HEAD with `<default-branch>`, so the verdict covers the whole
+   PR, not just this run. Note the **current branch** (`git rev-parse --abbrev-ref HEAD`) and
+   the **default branch** (`git symbolic-ref --short refs/remotes/origin/HEAD`, strip `origin/`;
+   else `main`, then `master`) — call it `<default-branch>`. **If HEAD is detached**, create and
+   switch to `4man/<kebab-slug-of-request>` now, before the mode decision, so commits attach to
+   a real ref.
 3. **Decide the working mode.** 4man does not branch for its own sake — it works where you
    already are, and only raises a PR when it's shipping a new feature to a repo that's already
    hosted:
@@ -114,7 +123,13 @@ delivers it at your next turn) and triage:
      create and switch to `4man/<kebab-slug-of-request>` (append `-2`, `-3`… if taken) so the
      feature never lands straight on the hosted mainline.
    - Tell the user the mode and the working branch.
-4. Create `.pipeline/`. If `templates/pipeline-readme.md` exists in the plugin
+4. **Decide the build mode** — it governs who commits:
+   - **new-project** — you're scaffolding/initialising a brand-new codebase (you ran `git init`
+     in Step 0.2, or there were no prior commits). Coders **commit their own units** as they
+     finish, so the new repo gets real, attributable history in the requestor's style.
+   - **feature-dev** — you're changing an existing codebase. Coders do **not** commit; the lead
+     makes the single integrated commit at Step 5.
+5. Create `.pipeline/`. If `templates/pipeline-readme.md` exists in the plugin
    (`${CLAUDE_PLUGIN_ROOT}/templates/pipeline-readme.md`), copy it to `.pipeline/README.md`.
    Remove a stale `specs.md` or `verdict.md` from a prior run. (The native task list carries
    coordination now; `.pipeline/` holds only these two durable documents.)
@@ -180,20 +195,30 @@ For a large or unfamiliar repo, spawn 2–4 read-only Explore-style passes concu
 built-in Explore subagent works well) to map the subsystems the feature touches, and hand the
 findings to the Planner. Skip for small repos.
 
-## Step 2 — Plan
+## Step 2 — Plan (synchronous; the planner then stays on)
 Spawn a **planner** teammate (the `4man:planner` agent type) with the feature request verbatim,
-the two context blocks (1a/1b), and any exploration findings. It writes `.pipeline/specs.md`.
-Confirm the file exists and is non-trivial; re-spawn once if not. Turn the spec's unit breakdown
-into the initial **task list** — one task per independent unit, with dependencies on the
-serialized units.
+the two context blocks (1a/1b), and any exploration findings. Planning comes first, so this step
+is synchronous: wait for it. It writes `.pipeline/specs.md`. Confirm the file exists and is
+non-trivial; re-spawn once if not. Turn the spec's unit breakdown into the initial **task list**
+— one task per independent unit, with dependencies on the serialized units.
+
+Keep the planner teammate **around** after it writes the spec: the Coders and Testers may message
+it directly (the mailbox) to resolve a spec question at its source, instead of routing every
+clarification through you. Release it once the crew reaches the review stage.
 
 ## Step 3 — Code in parallel (Coder teammates)
 1. Read `.pipeline/specs.md`. Confirm the units are disjoint file sets, with shared-file work and
    migrations marked serialized (they become dependent tasks).
-2. Spawn up to **5** **Coder** teammates (`4man:coder`), one per independent unit — that range is
-   the sweet spot; more adds coordination cost without matching speed. Each gets its unit's file
-   scope and the two context blocks in its spawn prompt, and claims its task. Coders edit the real
-   files directly — the diff is the deliverable, so there is no per-unit changes file.
+2. Spawn one **Coder** teammate (`4man:coder`) **per independent unit**, and scale to the job:
+   - A **single-feature change** to an existing codebase is usually one unit → **one Coder**.
+   - **Larger work or a new-project build/init** fans out — spawn **one Coder per independent
+     unit, up to 5** (that range is the sweet spot; more adds coordination cost without matching
+     speed).
+   Each gets its unit's file scope, the two context blocks, and the **build mode** (Step 0.4) in
+   its spawn prompt, and claims its task. Coders edit the real files directly — the diff is the
+   deliverable, so there is no per-unit changes file. In **new-project** mode, tell each Coder to
+   **commit its own unit** in the requestor's commit style when done; in **feature-dev** mode,
+   Coders do not commit (the lead commits once at Step 5).
 3. Serialized units (shared files / migrations) run as dependent tasks, one at a time.
 4. **Integration.** Where units meet, the teammates message each other to reconcile imports and
    wiring; you resolve genuine conflicts and run a quick build/typecheck/lint if the project
@@ -202,9 +227,11 @@ serialized units.
 
 ## Step 4 — Test in parallel (Tester teammates, bounded loopback)
 1. Spawn **Tester** teammates (`4man:tester`), one per unit/test target. Each reads its unit's
-   committed changes (`git diff` for the unit's files), the spec's acceptance criteria, and the
-   two context blocks; writes tests for the happy path and each edge case; runs them; and reports
-   PASS/FAIL (with counts and the key failure) by completing its task and messaging you.
+   changes — the uncommitted working-tree changes (`git diff HEAD`) plus the spec's file list
+   (reading the listed files catches newly created files a diff misses); if the unit was already
+   committed (new-project mode), its committed diff — together with the spec's acceptance criteria
+   and the two context blocks; writes tests for the happy path and each edge case; runs them; and
+   reports PASS/FAIL (with counts and the key failure) by completing its task and messaging you.
 2. Run the **full** suite once for integration.
 3. Track retries **per unit** on the task list. On FAIL with fewer than **2** coder retries for
    that unit: reopen the unit's task and message its Coder teammate the specific failures (fix the
@@ -213,32 +240,40 @@ serialized units.
    may need.
 
 ## Step 5 — Review
-**First, commit the integrated work** on the working branch in the requestor's commit style
-(Step 1a) — those commits are the diff the Reviewer reads and, in PR mode, what you push; a
-CHANGES-REQUESTED re-run just adds follow-up commits. **Humanize crew-authored prose (optional):**
-anything the crew wrote as prose — commit messages, the PR body, docs/READMEs in the change —
-should read as the requestor, not a model; if the `humanizer` plugin is installed, run
-`/humanizer:humanizer` over it before finalizing; skip silently if not.
-1. **Security-guidance bootstrap (before the security pass).** Use the `security-guidance`
+Order matters here: bootstrap the security policy, humanize the prose you're about to commit,
+commit, run the single security pass, then spawn the review team.
+1. **Security-guidance bootstrap.** Use the `security-guidance`
    convention: a committed, codebase-specific security policy under `.claude/`. If none exists in
    the workspace — check `<repo>/.claude/claude-security-guidance.md`,
    `…/claude-security-guidance.local.md`, and `~/.claude/claude-security-guidance.md` — create
    `<repo>/.claude/claude-security-guidance.md` with concrete security rules tailored to this
    repo's stack and trust boundaries. This file **is meant to be committed**. If the repo
    `.gitignore`s `.claude/`, note it and place the file where it will be tracked (or tell the user).
-2. **Single security pass.** Run **`/security-review` once** on the diff since the Step 0 start
-   commit. *You* (the lead) run it — it's a top-level command teammates and subagents can't
-   invoke; capture its findings. If `/security-review` isn't available in this version, say so and
-   have the Reviewer do a focused manual security pass instead.
-3. **Review.** Spawn the **`4man:reviewer`** as a teammate on the diff (base = the Step 0 start
-   commit — this run's work, in both modes), handing it the `/security-review` findings. As a
-   teammate it fans out the **4man:compliance-reviewer** + **4man:correctness-reviewer** as its own
-   **foreground subagents** (teammates cannot spawn teammates, but they can spawn subagents), does
-   its own diff/traceability pass, folds in the security findings, scores by severity + confidence,
-   and returns the verdict **as a message**. If it can't fan out sub-agents in this version, run
-   that two-way fan-out yourself and re-invoke the Reviewer to synthesize; if even that can't run,
-   compose the verdict yourself in the Reviewer's format. The verdict is never left unwritten.
-4. Write the returned (or composed) verdict to `.pipeline/verdict.md`.
+2. **Humanize crew-authored prose (optional) — before committing.** Anything the crew wrote as
+   prose — the draft commit messages, the PR body, docs/READMEs in the change — should read as the
+   requestor, not a model. If the `humanizer` plugin is installed, run `/humanizer:humanizer` over
+   it now; skip silently if not. Do this **before** the commit — a message already committed can't
+   be humanized without a rewrite.
+3. **Commit the integrated work** on the working branch in the requestor's commit style (Step 1a),
+   including the security-guidance file. In **new-project** mode the Coders already committed their
+   units (Step 3) — make any final integration commit. In **feature-dev** mode this is the single
+   commit for the run. These commits are the diff the Reviewer reads and, in PR mode, what you
+   push; a CHANGES-REQUESTED re-run just adds follow-up commits.
+4. **Single security pass.** Run **`/security-review` once** on this run's changes (the branch's
+   commits since the Step 0 start commit; in PR mode, the whole branch vs `<default-branch>`).
+   *You* (the lead) run it — it's a top-level command teammates can't invoke; capture its findings.
+   If `/security-review` isn't available in this version, say so and have the Reviewer do a focused
+   manual security pass instead.
+5. **Review — all teammates.** Spawn three teammates in parallel: the **`4man:reviewer`**, the
+   **`4man:compliance-reviewer`**, and the **`4man:correctness-reviewer`**, each on the diff
+   (base = the Step 0 start commit in in-place mode; the merge-base of HEAD with `<default-branch>`
+   in PR mode — so the verdict covers the whole PR, not just this run). Hand the Reviewer the
+   `/security-review` findings and the **`## Author & style profile`** block (1a) for its
+   style-drift check. Teammates cannot spawn teammates, so the compliance and correctness reviewers
+   **message their reports directly to the Reviewer** (the mailbox); the Reviewer does its own
+   diff/traceability + style-drift pass, folds in the security findings and both reports, scores by
+   severity + confidence, and returns the verdict **as a message**.
+6. Write the returned verdict to `.pipeline/verdict.md`.
 
 ## Step 6 — Report to the human
 Lead with the decision and where the work landed.
@@ -253,11 +288,19 @@ Lead with the decision and where the work landed.
   the branch and give the user the compare URL. Put the Reviewer's verdict in the PR body and
   report the PR URL. **Do not merge it** — that's the human's (or the repo's) call.
 - If CHANGES REQUESTED: offer "Reply `continue` and I'll run another Coder→Tester→Reviewer cycle."
+  A `continue` cycle **reuses the original Step-0 start commit** as the review base (persist it
+  across the cycle) so the re-review covers the whole run's diff, not just the follow-up fixes.
 
 ## Invariants
+- **Agent teams are required.** Every role — Planner, Coders, Testers, Reviewer, and the compliance
+  and correctness reviewers — runs as a teammate. If the feature isn't enabled, stop (see the
+  Prerequisite); there is no subagent fallback.
 - **Agent team, not a hand-off chain.** Teammates coordinate through the shared task list and the
   mailbox; you synthesize. The task list (plus `git log`) is the ledger and survives resume —
   never re-run a finished unit.
+- **Commits follow the build mode.** feature-dev → the lead makes the single integrated commit at
+  Step 5; new-project → Coders commit their own units and the lead makes any final integration
+  commit. The lead never lets two teammates commit the same files.
 - CLAUDE.md is binding and wins over any conflicting instruction. Teammates read it natively (no
   distillation); the compliance-reviewer reads it in full.
 - The style profile and development preferences live in mempalace + session memory ONLY — never

@@ -1,12 +1,18 @@
 ---
-description: Review a diff, branch, or PR with the 4man Reviewer — runs one /security-review (bootstrapping claude-security-guidance.md first) and fans out CLAUDE.md-compliance and correctness sub-reviews in parallel, returning a confidence-scored verdict. Read-only; never modifies code.
-argument-hint: "[PR number | branch | 'staged' | 'working' | 'HEAD~N' | range | empty = current branch vs default base]"
+description: Review a diff, branch, or PR with the 4man Reviewer — runs one /security-review (bootstrapping claude-security-guidance.md first) and spawns CLAUDE.md-compliance and correctness reviewers as teammates in parallel, returning a confidence-scored verdict. Read-only; never modifies code. Requires agent teams.
+argument-hint: "[empty = pending changes on current branch | PR number | branch | 'staged' | 'working' | 'HEAD~N' | range]"
 ---
 
 Review the target derived from: $ARGUMENTS
 
+## Prerequisite — agent teams must be enabled
+The review runs as an agent team (reviewer + compliance + correctness teammates), so
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` must be set. If it isn't, **stop**: tell the user to
+enable it in `~/.claude/settings.json` (or project settings) and restart. There is no fallback.
+
 ## Resolve the review target
-- empty → diff of the current branch vs the default base: `git merge-base HEAD <default-branch>`.
+- **empty → the pending changes on the current branch** (`git diff HEAD`) — the same scope
+  `/security-review` reviews natively, so the two passes cover the same code.
 - a number → a PR: get its diff via the GitHub MCP (`mcp__github__pull_request_read`,
   `method: get_diff`; derive `owner`/`repo` from the remote) when the remote is GitHub;
   else `gh pr diff <n>` if `gh` is available and authenticated; else fetch/checkout the
@@ -25,19 +31,21 @@ If you cannot resolve a target, ask the user once.
    stack. It's a committed project policy — writing it is intended. If the repo
    `.gitignore`s `.claude/`, note it and place the file where it'll be tracked (or tell
    the user).
-2. **Run `/security-review` once** on the resolved diff and capture its findings. (This
-   command runs in the main agent, which can invoke `/security-review`; the reviewer
-   subagent cannot.) If `/security-review` is unavailable, note it and let the Reviewer
-   do a focused manual security pass.
+2. **Run `/security-review` once** and capture its findings. `/security-review` reviews the
+   **pending changes on the current branch**, so it lines up with the default (empty) target
+   directly. For an explicit non-current-branch target (a PR, a range, another branch), first
+   check it out (or apply its diff to the working tree) so `/security-review` sees the same code;
+   if that isn't possible, note that the security command covered the current branch and have the
+   Reviewer run a focused manual security pass over the resolved diff instead. If `/security-review`
+   is unavailable entirely, note it and let the Reviewer do the manual security pass.
 
-## Review
-Invoke the **4man:reviewer** subagent on the resolved diff (tell it the base/range and
-hand it the `/security-review` findings). It fans out compliance and correctness
-sub-reviewers in parallel, folds in the security findings, scores by severity and
-confidence, and returns a verdict. There is no spec here, so the Reviewer skips
-requirement traceability and reviews the diff on its own merits. (If the Reviewer
-reports it cannot spawn sub-agents in this version, run the fan-out yourself and pass
-the reports back to it.)
+## Review — all teammates
+Spawn three teammates in parallel on the resolved diff: the **4man:reviewer** (hand it the
+base/range and the `/security-review` findings), the **4man:compliance-reviewer**, and the
+**4man:correctness-reviewer**. Teammates cannot spawn teammates, so the compliance and correctness
+reviewers **message their reports directly to the Reviewer**; it folds in the security findings and
+both reports, scores by severity and confidence, and returns the verdict. There is no spec here, so
+the Reviewer skips requirement traceability and reviews the diff on its own merits.
 
 ## Report
 Present the verdict: decision, then findings grouped by severity, each with confidence

@@ -14,7 +14,7 @@ You: "add rate limiting to the login endpoint"      (no command)
    Coder ×N  (teammates, parallel) ─▶ edit the code, claim tasks, message at seams
    Tester ×N (teammates, parallel) ─▶ write and run tests, report on the task list
    lead ─▶ one /security-review (+ claude-security-guidance.md)
-   Reviewer  (teammate) ─ fans out ─▶ compliance │ correctness ─▶ .pipeline/verdict.md
+   Reviewer + compliance + correctness  (teammates, parallel) ─▶ .pipeline/verdict.md
 ```
 
 The crew coordinates through the native **shared task list** and **mailbox**, not through files:
@@ -35,8 +35,8 @@ settings):
 }
 ```
 
-Restart the session. Without it, 4man cannot form a team: it says so, and offers to run the crew
-sequentially with subagents for that one run, or to proceed once you enable it. Agent teams are
+Restart the session. Agent teams are **required** — without the flag 4man stops and asks you to
+enable it; there is no subagent fallback. Agent teams are
 [experimental](https://code.claude.com/docs/en/agent-teams) and use more tokens than a single
 session, because each teammate is its own Claude instance; they earn that on the parallel
 build-and-test work the crew is built around.
@@ -58,8 +58,8 @@ ambiguous, it asks once before touching anything.
 /plugin install 4man@lzlrd
 ```
 
-Restart the session, then enable agent teams (above). Check: `/agents` lists the six `4man:*`
-agents, `/4man:code-review` is registered, and the `4man` skill shows in the skills list.
+Restart the session, then enable agent teams (above — required). Check: `/agents` lists the six
+`4man:*` agents, `/4man:code-review` is registered, and the `4man` skill shows in the skills list.
 
 ## Branches
 
@@ -108,11 +108,16 @@ it in full.
 
 ## Parallelism
 
-The Planner splits the work into independent units (disjoint files, no ordering). The lead spawns
-a Coder teammate per unit (up to five, the practical sweet spot), then Testers, all working at
-once; shared files and migrations serialise as dependent tasks. Two teammates never edit the same
-file. On a failure the lead loops a unit's Coder and Tester up to twice, then reports with the
-failures documented.
+The Planner splits the work into independent units (disjoint files, no ordering). A single-feature
+change is usually one unit, so one Coder; larger work or a new-project build fans out a Coder
+teammate per unit (up to five, the practical sweet spot). Then Testers, all working at once; shared
+files and migrations serialise as dependent tasks. Two teammates never edit the same file. On a
+failure the lead loops a unit's Coder and Tester up to twice, then reports with the failures
+documented.
+
+Who commits depends on the build mode: for a feature change the lead makes one integrated commit at
+review; for a new-project build the Coders commit their own units so the fresh repo gets real
+history.
 
 Testers find the root cause before touching anything: read the error, reproduce, trace the bad
 value to its source, weigh competing hypotheses, then fix a test defect or report an implementation
@@ -156,35 +161,36 @@ Step 0.5. **security-guidance** (from `claude-plugins-official`) is the
 
 ## The Reviewer
 
-Read-only: no Write/Edit on any reviewer, enforced by their tool lists. The lead spawns the
-Reviewer as a teammate; because a teammate can spawn subagents (just not more teammates), it fans
-out two read-only sub-reviewers in parallel as its own foreground subagents:
+Read-only: no Write/Edit on any reviewer, enforced by their tool lists. The lead spawns three
+review teammates in parallel — the Reviewer and its two sibling reviewers:
 
 - **compliance-reviewer:** CLAUDE.md conformance (reads it in full).
 - **correctness-reviewer:** logic, boundaries, error paths, races, idempotency, data integrity,
   spec edge cases.
 
-It folds in the `/security-review` findings and its own diff pass, tags each finding with severity
-and confidence, drops likely false positives, and issues APPROVED or CHANGES REQUESTED. If the
-running version cannot let a teammate spawn subagents, the lead runs the fan-out itself. Both paths
-are wired.
+Teammates can't spawn teammates, so the compliance and correctness reviewers message their reports
+straight to the Reviewer. It folds in those reports, the `/security-review` findings, its own diff
+pass, and a style-drift check against your profile, tags each finding with severity and confidence,
+drops likely false positives, and issues APPROVED or CHANGES REQUESTED.
 
 ## /4man:code-review
 
-Review an arbitrary diff, branch, or PR through the same read-only fan-out:
+Review an arbitrary diff, branch, or PR through the same read-only review team:
 
 ```sh
-/4man:code-review                 # current branch vs its default base
+/4man:code-review                 # pending changes on the current branch
 /4man:code-review 123             # PR #123 (via GitHub MCP, else gh)
 /4man:code-review staged          # git diff --cached
 /4man:code-review working         # unstaged working tree
 /4man:code-review HEAD~3          # a range
 ```
 
-It bootstraps the security guidance, runs one `/security-review`, fans out compliance and
-correctness, and returns a confidence-scored verdict. This one stays a read-only subagent review:
-a focused report-back job suits a subagent rather than a team. For a PR (via the GitHub MCP, else
-`gh`) it offers to post the findings as inline comments, only after you confirm.
+With no argument it reviews the **pending changes on the current branch** — the same scope
+`/security-review` covers, so the two passes line up. It bootstraps the security guidance, runs one
+`/security-review`, spawns the compliance and correctness reviewers as teammates alongside the
+Reviewer, and returns a confidence-scored verdict. It needs agent teams enabled, like the full crew.
+For a PR (via the GitHub MCP, else `gh`) it offers to post the findings as inline comments, only
+after you confirm.
 
 ## Models and Effort
 

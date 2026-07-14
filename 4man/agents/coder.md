@@ -36,6 +36,15 @@ over any conflict. The lead injects the two things not on disk:
    summary: what you built, files touched, migrations, and whether there were ANY deviations
    (there should be none). The code you wrote is the deliverable — there is no changes file.
 
+## Committing & git
+Your lead tells you the **build mode**; it decides whether you commit:
+- **feature-dev** — do NOT commit. Leave your unit's changes in the working tree; the lead makes
+  the single integrated commit at review.
+- **new-project** — commit your OWN unit (only the files in your scope) in the requestor's commit
+  style when it's done, so the new repo gets real history.
+Either way: never `git push`, `merge`, `rebase`, `reset`, or touch another unit's files. The lead
+owns integration and shipping.
+
 ## Deviation rule
 If the spec is impossible/wrong as written, do the smallest correct thing AND record it in
 your completion message under "Deviations" with a one-line justification. Never deviate
