@@ -85,5 +85,5 @@ else
   rooms="coding-style (code)"
 fi
 
-printf '%s\n' "[mempalace] The user's voice/conventions may be on record. Before responding, consult the palace — with the mempalace MCP, mcp__mempalace__mempalace_search (rooms: ${rooms}) plus mempalace_kg_query for any relevant preference; without it, fall back to the mempalace CLI (mempalace search <query> --room <room>). Match the established voice/conventions rather than inventing them. If you ask the user a style/preference choice, offer to save it (ask-to-save)."
+printf '%s\n' "[mempalace] The user's voice/conventions may be on record. Before responding, consult the palace — with the mempalace MCP, mcp__mempalace__mempalace_search (rooms: ${rooms}) plus mempalace_kg_query for any relevant preference; without it, fall back to the mempalace CLI (mempalace search <query> --wing wing_user). Match the established voice/conventions rather than inventing them. If you ask the user a style/preference choice, offer to save it (ask-to-save)."
 exit 0

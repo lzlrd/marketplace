@@ -11,4 +11,4 @@ Pass `global` (`~/.claude/CLAUDE.md`) or `local` (this project, `./CLAUDE.md`). 
 bash ${CLAUDE_PLUGIN_ROOT}/setup/uninstall.sh $ARGUMENTS
 ```
 
-This removes only the CLAUDE.md block. To also unregister the two hooks, run `claude plugin uninstall mempalace-hooks` afterward.
+This removes only the CLAUDE.md block. To also unregister the three hooks, run `claude plugin uninstall mempalace-hooks` afterward.

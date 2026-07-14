@@ -52,7 +52,7 @@ Four touches keep it current. A hook can prompt Claude but can't write memory it
 /mempalace-hooks:setup global   # or: local (this project only)
 ```
 
-`/mempalace-hooks:setup` appends the managed block (delimited by `<!-- MEMPALACE-HOOKS:BEGIN -->` … `<!-- MEMPALACE-HOOKS:END -->`) to your `CLAUDE.md`. It is idempotent: re-running replaces the old block in place, and it writes a timestamped backup first. The two hooks register automatically from [`hooks/hooks.json`](hooks/hooks.json) on install. Setup does not touch `settings.json`, so it cannot clobber your existing hooks or settings.
+`/mempalace-hooks:setup` appends the managed block (delimited by `<!-- MEMPALACE-HOOKS:BEGIN -->` … `<!-- MEMPALACE-HOOKS:END -->`) to your `CLAUDE.md`. It is idempotent: re-running replaces the old block in place, and it writes a timestamped backup first. The three hooks register automatically from [`hooks/hooks.json`](hooks/hooks.json) on install. Setup does not touch `settings.json`, so it cannot clobber your existing hooks or settings.
 
 > After installing, delete any hand-written memory prose already in your `CLAUDE.md`. The managed block is the single source of truth; keeping both drifts.
 
@@ -63,7 +63,7 @@ Four touches keep it current. A hook can prompt Claude but can't write memory it
 /plugin uninstall mempalace-hooks
 ```
 
-`/mempalace-hooks:uninstall` removes the managed block from your `CLAUDE.md`. `/plugin uninstall mempalace-hooks` unregisters the two hooks. The block sits between `<!-- MEMPALACE-HOOKS:BEGIN -->` and `<!-- MEMPALACE-HOOKS:END -->`, so you can also delete it by hand.
+`/mempalace-hooks:uninstall` removes the managed block from your `CLAUDE.md`. `/plugin uninstall mempalace-hooks` unregisters the three hooks. The block sits between `<!-- MEMPALACE-HOOKS:BEGIN -->` and `<!-- MEMPALACE-HOOKS:END -->`, so you can also delete it by hand.
 
 ## Requirements
 

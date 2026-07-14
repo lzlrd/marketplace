@@ -1,6 +1,6 @@
 {
   "name": "mempalace-hooks",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "license": "PolyForm-Noncommercial-1.0.0",
   "description": "Wires the mempalace memory server into Claude Code: directive hooks that load palace context, pull your writing/coding voice, and auto-nudge a per-day session diary; a match-style skill that pulls your MemPalace conventions before you write; and a mempalace-CLI fallback when the MCP isn't connected.",
   "author": { "name": "Diab Neiroukh", "url": "https://ayoo.by" },

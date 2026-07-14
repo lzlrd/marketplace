@@ -2,9 +2,9 @@
 
 # Mempalace-hooks setup: append the managed memory block into CLAUDE.md (idempotent, with backup).
 
-# The two hooks (SessionStart / UserPromptSubmit) are registered automatically by hooks.json on
-# plugin install, so this script does NOT touch settings.json (no risk of clobbering existing
-# hooks or settings).
+# The three hooks (SessionStart / UserPromptSubmit / PostToolUse) are registered automatically by
+# hooks.json on plugin install, so this script does NOT touch settings.json (no risk of clobbering
+# existing hooks or settings).
 
 # Usage: setup.sh [global|local]   (no arg = interactive, default local)
 
@@ -46,6 +46,6 @@ print("  ✓ CLAUDE.md: MEMPALACE-HOOKS memory block injected (idempotent)")
 PY
 
 echo "mempalace-hooks setup complete ($scope); applies from the next session."
-echo "  The two hooks (SessionStart / UserPromptSubmit) are auto-registered on plugin install."
+echo "  The three hooks (SessionStart / UserPromptSubmit / PostToolUse) are auto-registered on plugin install."
 echo "  Uninstall: bash $ROOT/setup/uninstall.sh $scope"
 echo "  IMPORTANT: delete any now-redundant manual MemPalace prose from your CLAUDE.md to avoid duplication."
