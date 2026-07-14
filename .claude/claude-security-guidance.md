@@ -4,7 +4,7 @@ Repo-wide security policy for the `lzlrd` marketplace and the plugins it ships. 
 
 ## Scope
 
-The marketplace vendors six plugins as source (`mempalace-hooks`, `system-design`, `4man`, `realfavicon-mcp`, `offshore`, `prompt-engineering`) and tracks `fableplan` as a submodule. Three of them carry a real security surface: two MCP servers that run code on Bun (`realfavicon-mcp`, `offshore`) and one plugin that registers shell hooks (`mempalace-hooks`). The rest are skills and agent definitions with no runtime of their own. The sections below cover the parts that matter.
+The marketplace vendors eleven plugins as source (`mempalace-hooks`, `system-design`, `4man`, `realfavicon-mcp`, `offshore`, `prompt-engineering`, `reload-claude-md`, `export-skills`, `platform-docs`, `library-docs`, `semver`) and tracks `fableplan` as a submodule (twelve in all). The ones with a real security surface: two MCP servers that run code on Bun (`realfavicon-mcp`, `offshore`), one plugin that registers shell hooks (`mempalace-hooks`), and one that ships local Python scripts (`export-skills`). The rest are skills and command/agent definitions with no runtime of their own. The sections below cover the parts that matter.
 
 ## realfavicon-mcp
 
@@ -12,9 +12,10 @@ Every tool input arrives from an MCP client (often LLM-driven) and is untrusted:
 
 `realfavicon_generate`, `realfavicon_check`, and `realfavicon_changelog` all issue outbound `fetch` on caller-supplied URLs, so server-side request forgery is inherent to the tool's purpose. Contain it:
 
-- Do not follow non-`http(s)` schemes. `fetch` rejects them by default; do not add scheme-relaxing or redirect-following to `file://` and similar.
+- Do not follow non-`http(s)` schemes. `src/net.ts` `assertSafeFetchUrl` enforces this (and is called before every outbound `fetch` in `generate.ts` and `check.ts`); do not add scheme-relaxing or redirect-following to `file://` and similar.
+- `assertSafeFetchUrl` resolves the host and refuses link-local / cloud-metadata addresses (169.254.0.0/16, fe80::/10, the IMDS endpoints). Loopback and private LAN are intentionally allowed so localhost/intranet dev servers still work. Keep this guard on every fetch path; if you add a new outbound fetch, gate it through `assertSafeFetchUrl` too.
 - Do not echo internal response headers or bodies beyond what each tool contract returns.
-- This server runs locally with the invoking user's privileges, not as a hosted multi-tenant service. If it is ever exposed as a network service, add an allow-list and block private and link-local IP ranges before shipping.
+- This server runs locally with the invoking user's privileges, not as a hosted multi-tenant service. If it is ever exposed as a network service, tighten the guard to also block private ranges before shipping.
 
 On the filesystem: `realfavicon_generate` writes to the caller-supplied `output_dir`, but the filenames come from the RFG library (a fixed set: `favicon*.png`, `favicon.ico`, `favicon.svg`, `site.webmanifest`, `web-app-manifest-*.png`), not from caller input, so there is no filename-driven path traversal. Temp downloads use `tmpdir()` plus `crypto.randomUUID()` and are unlinked in a `finally` on both success and error. Keep the cleanup; never write temp files to predictable paths.
 
@@ -26,7 +27,7 @@ Offshore forwards prompts to a local uncensored model on purpose. That filter by
 
 ## mempalace-hooks
 
-Both hooks run `set -uo pipefail`, always exit 0, and emit plain text only, so a hook failure cannot break a session (fail-open). `session_id` feeds marker and `rm` paths, so it is stripped to `[A-Za-z0-9_-]` before use to block `../` traversal. The hooks read and write only their own state directory and inject text; they never execute model output.
+All three hooks (SessionStart, UserPromptSubmit, PostToolUse) run `set -uo pipefail`, always exit 0, and emit plain text only, so a hook failure cannot break a session (fail-open). `session_id` feeds marker and `rm` paths, so it is stripped to `[A-Za-z0-9_-]` before use to block `../` traversal. The hooks read and write only their own state directory and inject text; they never execute model output.
 
 ## General
 
