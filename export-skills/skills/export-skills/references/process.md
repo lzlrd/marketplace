@@ -61,10 +61,17 @@ A skill **qualifies** iff ALL hold:
 
 ---
 
-## Phase 2 — Classify each skill (one reviewer per skill)
+## Phase 2 — Classify each skill (cluster first, delegate only what's left)
 
-Fan out one sub-agent per skill (parallel). Each reads its SKILL.md (and peeks at `scripts/` or
-resources if how it operates is unclear), is handed the Desktop MCP list, and returns:
+**Do not fan out one sub-agent per skill.** A real install is dozens, often 80+, and most are
+decidable from `SKILL.md` alone: pure-prompt and artifact skills clearly run in Desktop, skills whose
+only tools are Claude-Code dev tooling clearly don't. Classify those inline. Then **cluster the
+remainder by shared dependency** — same MCP, same local-shell capability — and classify each cluster
+once, which the **identical dependency ⇒ identical verdict** rule in Phase 3 makes sound.
+
+Only the genuinely borderline skills that survive that pass get a sub-agent, and **cap concurrency at
+about 8**. Each sub-agent reads its SKILL.md (and peeks at `scripts/` or resources if how it operates
+is unclear), is handed the Desktop MCP list, and returns:
 
 ```
 verdict:               OK | CAVEAT | NO

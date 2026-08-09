@@ -32,7 +32,7 @@ differs between the two. There is no `--lenient` flag; lenient is the default.
 
 ```
 /export-skills [--strict]
-        │  inventory (script) → classify (one sub-agent per skill) → package (script)
+        │  inventory (script) → classify (inline + clustered, sub-agents only for edge cases) → package (script)
         ▼
    inventory ── plugin cache + personal skills, traps handled, Desktop MCP list read
    classify  ── three criteria: runs in Desktop · relevant to Desktop · MCP available
