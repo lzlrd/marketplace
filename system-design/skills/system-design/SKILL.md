@@ -200,20 +200,21 @@ Deliver a written design using the structure below.
 ## Cost notes & open questions
 ```
 
+Match the document's length to the design's actual complexity. Every section above earns its place
+by carrying a decision; drop one that has nothing to say rather than padding it, and don't close
+with a summary that restates the sections above it. A "which database should I use" answer is a
+few paragraphs, not this whole skeleton.
+
 If a diagram tool (e.g. the `drawio-aws` MCP) is connected, offer to render the architecture — a
 picture carries an architecture better than prose. Otherwise describe it clearly enough to draw by
 hand.
 
 ## Common mistakes to avoid
 
-- **Designing without constraints.** No scale/consistency/latency numbers → the design is a guess. Pin them or ask.
-- **Buzzword-driven selection.** "Use Kafka, it scales" isn't a reason. Tie every choice to the requirement it serves.
 - **Porting service names, not designs.** The clouds' "equivalents" differ in ways that change the design: Cosmos DB prices by RU and offers five consistency levels, DynamoDB doesn't; Pub/Sub is one service covering queue + fan-out + stream, SQS/SNS/Kinesis are three; a GCP load balancer is global anycast, an ALB is regional; Cloudflare Workers KV is eventually consistent and there's no managed event bus, so a design that leans on strong-read KV or SNS-style fan-out must be re-derived, not translated. Re-derive the choice from the requirement on the target cloud.
 - **Single points of failure.** One zone, one node, one queue with no DLQ. Walk the failure modes in step 5.
 - **Average-case sizing.** Capacity must cover peak (2–3× avg), not the average, or it falls over exactly when it matters.
-- **Over-engineering.** Microservices, multi-region, and event sourcing for a system that serves 10 QPS is its own failure. The simplest design that meets the requirements is the correct one; add complexity only when an estimate forces it.
 - **Mixing implementation into architecture.** Design the interfaces and data flow; don't drift into writing the handler code.
-- **No tradeoff or failure analysis.** A design with no stated tradeoffs hasn't been thought through — every real choice gives something up.
 
 ## Reference files
 
