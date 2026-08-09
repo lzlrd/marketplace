@@ -12,7 +12,7 @@ description: >-
   realfavicon_check, realfavicon_changelog) to build a complete favicon and
   app-icon set plus ready-to-paste <head> markup from one master image, audit a
   live page's favicon setup, and track RealFaviconGenerator changes.
-version: 1.0.0
+version: 1.0.1
 ---
 
 # Favicons
@@ -70,24 +70,13 @@ icons manually — that is exactly what `realfavicon_generate` exists to prevent
    URL and resolve any errors/warnings. For a local-only build, state that
    verification needs a reachable URL.
 
-## `realfavicon_generate` inputs
+## `realfavicon_generate`
 
-| Field | Required | Notes |
-|-------|----------|-------|
-| `source` | yes | Master image: local path or `http(s)` URL (PNG/SVG/…). |
-| `output_dir` | yes | Filesystem directory to write files into (created if missing). |
-| `path` | no (default `/`) | URL prefix written into `href`s & manifest, e.g. `/favicons/`. |
-| `app_name` | no | Web-app manifest name (the installed-app name). |
-| `short_name` | no | Manifest short name (defaults to `app_name`). |
-| `theme_color` | no | Hex only (`#rgb` or `#rrggbb`). |
-| `background_color` | no | Hex only. |
-| `app_title` | no | Apple touch-icon app title. |
-| `version` | no | Cache-busting query string appended to `href`s. |
-| `dark_icon_source` | no | Second image (path/URL) for a dark-mode icon. |
-
-For branding from a logo, set `app_name` and the brand `theme_color` /
-`background_color` so the manifest and installed-app appearance match the brand.
-Pass `dark_icon_source` when the mark needs a distinct dark-mode variant.
+The tool schema documents every field; only `source` and `output_dir` are required.
+What the schema can't tell you: for branding from a logo, set `app_name` and the brand
+`theme_color` / `background_color` so the manifest and installed-app appearance match
+the brand, and pass `dark_icon_source` when the mark needs a distinct dark-mode variant.
+Colours are hex only.
 
 ### What it emits
 
@@ -158,30 +147,20 @@ served from the root:
 Use to verify a freshly-wired site, or to assess an existing site's favicon
 setup before changing it.
 
-- Inputs: `url` (the page to audit), `include_icon_data` (default `false`; set
-  `true` only when the base64 icon bytes are actually needed — the payload is
-  large).
-- It fetches the page, parses `<head>`, and returns `has_errors`,
-  `has_warnings`, the page title, and per-platform sections (`desktop`,
-  `touch_icon`, `web_app_manifest`) each carrying human-readable `messages` plus
-  detected icon metadata.
-
-Read `has_errors`/`has_warnings` first, then walk the section `messages` to fix
-what's flagged. The page must be fetchable from where the tool runs — a
-localhost URL only works if it's reachable.
+Leave `include_icon_data` off unless the base64 icon bytes are genuinely needed; the
+payload is large. Read `has_errors`/`has_warnings` first, then walk the per-platform
+section `messages` (`desktop`, `touch_icon`, `web_app_manifest`) to fix what's flagged.
+The page must be fetchable from where the tool runs — a localhost URL only works if it's
+reachable.
 
 ## `realfavicon_changelog` — keep markup current
 
 RealFaviconGenerator's recommended markup evolves. Use this when revisiting an
 older site's favicons, or to decide whether regeneration is worthwhile.
 
-- Inputs: `since` (a prior RFG version like `"0.8.3"` — returns only newer
-  changes), `format` (`markdown` (default) or `html`).
-- Returns `up_to_date` (true when nothing is newer than `since`), `count`, and
-  the `changes` list (version, date, description, importance, update guidance).
-
-If `up_to_date` is true, the existing markup still follows current
-recommendations; otherwise summarise what changed and offer to regenerate.
+Pass `since` (a prior RFG version like `"0.8.3"`) to get only newer changes. If it comes
+back `up_to_date`, the existing markup still follows current recommendations; otherwise
+summarise what changed and offer to regenerate.
 
 ## Common mistakes to avoid
 
