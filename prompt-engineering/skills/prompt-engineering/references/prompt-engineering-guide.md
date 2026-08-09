@@ -68,7 +68,7 @@ Tune **one of each opposing pair**, not both. Prompt first; adjust these only wh
 | Concept | What it is | Key prompt-design points |
 | :-- | :-- | :-- |
 | **Prompt chaining** | Split a task into subtasks; feed each prompt's output into the next. | Use distinct prompts per step (e.g. prompt 1 extracts relevant quotes; prompt 2 answers using them). Improves reliability, controllability, debuggability, and personalization. |
-| **ReAct agents** | Interleave reasoning traces (Thought) with actions (Action) and tool results (Observation) so the model can plan, call tools, observe, and adjust. | Provide few-shot exemplars of Thought → Action → Observation trajectories. Describe available tools clearly and instruct the model to combine internal reasoning with external observations. |
+| **ReAct agents** | Interleave reasoning traces (Thought) with actions (Action) and tool results (Observation) so the model can plan, call tools, observe, and adjust. | Provide few-shot exemplars of Thought → Action → Observation trajectories. Describe available tools clearly and instruct the model to combine internal reasoning with external observations. **Not for Claude 5 targets:** written-out `Thought:` traces are the model reproducing its reasoning as response text, which trips the `reasoning_extraction` refusal category on Fable 5 / Mythos 5. Use native tool calling and read the provider's structured thinking output instead. |
 | **RAG** | Combine a retrieval component with the generator: fetch relevant documents and feed them as context. | Concatenate retrieved docs into the prompt as context; explicitly instruct the model to answer *from* that context. Reduces hallucination and adds up-to-date/proprietary knowledge without retraining. "Agentic RAG" lets an LLM/agent decide what to retrieve and route complex queries. |
 
 ---
@@ -77,11 +77,15 @@ Tune **one of each opposing pair**, not both. Prompt first; adjust these only wh
 
 Prompt them differently:
 
-| Aspect | Reasoning models (o-series, Gemini 2.5 Pro, Claude 3.7+, …) | Standard chat models (GPT-3.5/4, …) |
+Reasoning is the default now, not the exception: assume a reasoning model unless the target is
+explicitly an older or deliberately non-reasoning one.
+
+| Aspect | Reasoning models (Claude 5 family, GPT-5.x, Gemini 3, o-series, …) | Standard chat models (older/non-reasoning tiers) |
 | :-- | :-- | :-- |
 | **Chain-of-thought** | **Avoid manual CoT**: telling them to "think step by step" can *hurt* instruction-following; they reason internally. | Benefit from manual CoT ("Let's think step by step") on hard tasks. |
 | **Instruction style** | Simple, direct, explicit; state response constraints; remove ambiguity. | Benefit from descriptive prompts, examples, and explicit logic frameworks. |
 | **Reasoning effort** | Have native internal "thinking" (test-time compute); some expose low/medium/high effort. Start in standard mode, escalate only if needed. | Emit tokens immediately; no hidden planning. |
+| **Reasoning visibility** | Never ask them to echo, transcribe, or explain their internal reasoning as response text. On Claude Fable 5 / Mythos 5 that is refused outright (`reasoning_extraction`) and falls back to a weaker model. Ask for a conclusion-level rationale, or read the provider's structured thinking output. | Safe to ask for worked steps inline in the answer. |
 | **Failure mode** | Over-/under-think when tasks or output formats aren't strictly specified. | Shallow/hallucinated answers on complex arithmetic/symbolic tasks without step-by-step guidance. |
 
 ---

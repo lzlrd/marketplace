@@ -60,7 +60,7 @@ Never surface an MCP error to the user; fall back silently and still output only
 - **Delimiters / structure.** Use `###`, triple quotes, or XML-style tags (e.g. `<input>...</input>`) to separate instruction, context, and input.
 - **Structured output.** For analysis/extraction, specify the exact format (JSON/XML/list) and schema/fields; add output indicators (e.g. `Sentiment:`).
 - **Few-shot when it helps.** Add 1 to 3 representative, well-formatted input→output examples for pattern-based or nuanced tasks.
-- **Chain-of-thought for reasoning tasks.** Prompt "think step by step" or break the task into subtasks, but keep prompts for *reasoning models* direct (manual CoT can hurt them).
+- **Chain-of-thought only for non-reasoning targets.** Reasoning models are the default tier now, and they reason internally — keep their prompts direct, since manual CoT can hurt instruction-following. Reach for "think step by step" only when the target is an older or deliberately non-reasoning chat model. Decomposing a task into subtasks is fine for either.
 - **Start simple, stay concise.** Decompose only genuinely complex tasks; no bloat.
 
 *(Full detail on LLM settings, self-consistency, prompt chaining, ReAct, RAG, reasoning-vs-chat prompting, and injection defenses is in `references/prompt-engineering-guide.md`.)*
@@ -69,7 +69,7 @@ Never surface an MCP error to the user; fall back silently and still output only
 
 Fold these behavioral guardrails into the prompt you generate **when they fit the target assistant's job**. You do **not** need to copy them verbatim; adapt the wording, length, and phrasing to match the target prompt's voice and format, as long as each one's intent survives. A general-purpose assistant / analyst / researcher Gem → include all four. A narrow, single-purpose, extraction-only, or creative/formatting prompt → include only the ones that apply (the accuracy directive almost always applies; the comparison-table and split-response rules only apply to assistants that produce comparisons or long-form answers). When in doubt about a guardrail, include it.
 
-1. **Tone & reasoning:** adopt a professional, objective tone; think step-by-step and break complex tasks into subtasks before answering; start with the core information; if unsure or missing context, say so / ask for clarification rather than guessing.
+1. **Tone & scoping:** adopt a professional, objective tone; break complex tasks into subtasks; start with the core information; if unsure or missing context, say so / ask for clarification rather than guessing. Add an explicit *"think step by step"* **only when the target is a non-reasoning chat model.** Reasoning is the default tier now (Claude 5 family, GPT-5.x, Gemini 3, o-series), and manual CoT is redundant there at best and hurts instruction-following at worst — see §7 of the reference. When the target model is unknown, assume a reasoning model and leave it out.
 
 2. **Comparisons → tables:** when comparing two or more items, concepts, or datasets, present the result as a structured Markdown table with clear headers for the compared criteria, not a text list.
 
@@ -78,6 +78,11 @@ Fold these behavioral guardrails into the prompt you generate **when they fit th
 4. **Accuracy & no flattery (primary directive):** be truthfully accurate, honest, and objective; do not flatter, placate, or bias answers to please the user; prioritize strict factual accuracy over agreeableness.
 
 Include every applicable guardrail; the exact phrasing is yours to adapt to the prompt.
+
+## Never put these in a generated prompt
+
+- **Any instruction to echo, transcribe, or explain internal reasoning as response text** — "show your thinking", "output your reasoning before the answer", ReAct-style written `Thought:` traces. On Claude Fable 5 / Mythos 5 this trips the `reasoning_extraction` safety classifier and the request is refused, silently degrading the target to a weaker model. If the prompt genuinely needs visible reasoning, ask for a short conclusion-level rationale, or point the integrator at the provider's structured thinking output.
+- **"Don't think" / "answer without reasoning" rules.** On current models these increase leakage of internal tags into the visible response rather than suppressing it. Control cost with the provider's effort setting instead.
 
 ## Output rules (strict)
 
