@@ -6,7 +6,7 @@
 # them.
 
 # Stdin: JSON {"prompt": "...", "session_id": "..."}. stdout: the directive, on a matching turn and at
-# most ONCE per signal per session (dedup markers). Always exits 0, so it never breaks a turn.
+# most once per signal per cooldown window per session. Always exits 0, so it never breaks a turn.
 
 # Gating uses word-boundary matching (not substrings), so 'api' never fires on "capital", 'doc' never
 # on "doctor", 'test' never on "latest". A few inflections (s/es/ed/ing/er, incl. e-drop) still match.
@@ -58,23 +58,36 @@ want_w="${want_w:-0}"; want_c="${want_c:-0}"
 [ "$want_c" = "1" ] || want_c=0
 [ "$want_w" -eq 0 ] && [ "$want_c" -eq 0 ] && exit 0   # non-style turn → inject nothing (the point of gating).
 
-# Dedup: inject each signal at most once per session (markers keyed by session_id). SessionStart
-# clears these on resume/clear/compact, so voice re-pulls once when earlier context may have been lost.
+# Cooldown: re-inject each signal at most once per $cooldown seconds per session (markers keyed by
+# session_id, epoch stored as file CONTENT — portable, no stat/date -r flavour to trip over; same
+# shape as the diary hook). A one-shot-per-session pull anchors voice at hour zero and then goes
+# quiet, which is wrong for a long run: by hour three the pulled conventions may be far behind the
+# active turn. SessionStart still clears "$sid".* on resume/clear/compact, so a rewritten transcript
+# re-pulls at once rather than waiting out the cooldown. Override with MEMPALACE_STYLE_COOLDOWN.
+cooldown="${MEMPALACE_STYLE_COOLDOWN:-3600}"
+[ "$cooldown" -ge 0 ] 2>/dev/null || cooldown=3600   # guard against a non-numeric override under set -u
+now="$(date +%s 2>/dev/null || echo 0)"
+
 state_dir="${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/mempalace-hooks"   # HOME fallback: set -u must not abort us
+stale() {   # true when the marker is absent or older than the cooldown
+  [ -f "$1" ] || return 0
+  local last; last="$(cat "$1" 2>/dev/null || echo 0)"; last="${last//[^0-9]/}"; last="${last:-0}"
+  [ "$((now - last))" -ge "$cooldown" ]
+}
 new_w=0; new_c=0
 if [ -n "$sid" ]; then
   mkdir -p "$state_dir" 2>/dev/null || true
-  [ "$want_w" -eq 1 ] && [ ! -e "$state_dir/$sid.w" ] && new_w=1
-  [ "$want_c" -eq 1 ] && [ ! -e "$state_dir/$sid.c" ] && new_c=1
+  [ "$want_w" -eq 1 ] && stale "$state_dir/$sid.w" && new_w=1
+  [ "$want_c" -eq 1 ] && stale "$state_dir/$sid.c" && new_c=1
 else
-  new_w="$want_w"; new_c="$want_c"   # no session_id → can't dedup; inject rather than lose the turn.
+  new_w="$want_w"; new_c="$want_c"   # no session_id → can't track; inject rather than lose the turn.
 fi
-[ "$new_w" -eq 0 ] && [ "$new_c" -eq 0 ] && exit 0   # already pulled this session → stay quiet.
+[ "$new_w" -eq 0 ] && [ "$new_c" -eq 0 ] && exit 0   # pulled recently → stay quiet.
 
-# Record the signals we're about to satisfy (before printing, so a re-run can't double-fire).
+# Stamp the signals we're about to satisfy (before printing, so a re-run can't double-fire).
 if [ -n "$sid" ]; then
-  [ "$new_w" -eq 1 ] && : 2>/dev/null >"$state_dir/$sid.w" || true
-  [ "$new_c" -eq 1 ] && : 2>/dev/null >"$state_dir/$sid.c" || true
+  [ "$new_w" -eq 1 ] && printf '%s\n' "$now" >"$state_dir/$sid.w" 2>/dev/null || true
+  [ "$new_c" -eq 1 ] && printf '%s\n' "$now" >"$state_dir/$sid.c" 2>/dev/null || true
 fi
 
 if [ "$new_w" -eq 1 ] && [ "$new_c" -eq 1 ]; then
