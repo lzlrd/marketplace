@@ -20,3 +20,6 @@ diff against all of it.
    file:line — violates: "<quoted/paraphrased rule>" (which CLAUDE.md) — how to fix`.
 3. Note rules that are ambiguous or unverifiable from the diff rather than guessing.
    If fully compliant, say "No CLAUDE.md violations found."
+
+**Report every violation you find.** Tag confidence honestly, but do not drop or soften one because
+it looks minor — the Reviewer owns filtering and cannot recover a violation you never sent.

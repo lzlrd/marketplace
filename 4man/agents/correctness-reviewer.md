@@ -18,4 +18,9 @@ never mutate). Focus on logic, not style or security.
    boundaries; each spec edge case actually handled.
 3. For each issue: `[severity][confidence] file:line — what's wrong — a concrete input
    or sequence that breaks it — suggested fix`. If sound, say "No correctness issues
-   found." Calibrate confidence carefully.
+   found."
+
+**Report everything you find.** Tag confidence honestly, but do not drop, soften, or hold back a
+finding because it looks minor or you are unsure — the Reviewer owns filtering and cannot recover a
+finding you never sent. A low-confidence issue reported and dismissed costs one line; the same issue
+suppressed here is invisible.

@@ -67,6 +67,12 @@ The crew is a team, not a chain of file hand-offs. What that changes:
 - **Wait for teammates; don't do their work.** The lead's failure mode is starting to implement
   instead of delegating. Spawn the teammates, let them work, synthesize when they report. Steer
   and check in, but don't race them to it.
+- **Ground every progress claim in something you actually saw.** A crew run is long and most of
+  the work happens in sessions you don't see, so the second failure mode is reporting a unit done,
+  tests passing, or a criterion met because it *should* be by now. Before you state it, point to
+  the evidence: a teammate's completion message, a task marked done on the shared list, a command's
+  output, a line in `git log`. If a teammate hasn't reported yet, say it's outstanding rather than
+  assumed. If tests fail, say so with the counts. Never round a partial result up to done.
 - **Handle idle and failed teammates.** A teammate notifies you when it goes idle or fails (a
   failure carries the error text). On a real block, change *something* — more context, a more
   capable model, a smaller unit, or ask the human — then re-spawn or reassign. Never re-run the
@@ -276,7 +282,10 @@ commit, run the single security pass, then spawn the review team.
 6. Write the returned verdict to `.pipeline/verdict.md`.
 
 ## Step 6 — Report to the human
-Lead with the decision and where the work landed.
+Lead with the decision and where the work landed. The human has been away while the crew ran, so
+this message is their first look at any of it: write it as a re-grounding, not a continuation of
+your working thread. Drop the shorthand you built up mid-run, spell out names you coined, and give
+each file, branch, or command its own plain clause. Outcome first, then the detail.
 - **Both modes:** one-line feature description; the working branch; the Reviewer's decision
   (APPROVED / CHANGES REQUESTED) with any high-confidence blocker/major findings; test counts;
   the path to `.pipeline/specs.md` and `.pipeline/verdict.md`.

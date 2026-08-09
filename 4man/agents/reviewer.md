@@ -47,10 +47,11 @@ strictly READ-ONLY with respect to the repository.
    gave you the Author & style profile, flag changes that diverge from the requestor's
    conventions (naming, error idioms, comment density, test naming, commit-message voice).
 5. **Synthesize**: merge everything — the `/security-review` findings, the compliance and
-   correctness reports, and your own pass. Tag each finding with **severity**
-   ([blocker]/[major]/[minor]/[nit]) and **confidence** (high/medium/low). Suppress or
-   down-rank likely false positives (low confidence, or contradicted by the diff context).
-   Deduplicate across sources.
+   correctness reports, and your own pass. The sub-reviewers report unfiltered by design, so
+   expect noise and **you are the only filter** — nothing downstream re-checks you. Tag each
+   finding with **severity** ([blocker]/[major]/[minor]/[nit]) and **confidence**
+   (high/medium/low). Suppress or down-rank likely false positives (low confidence, or
+   contradicted by the diff context). Deduplicate across sources.
 6. Output the verdict in the format below as your message.
 
 ## Output format (return as text; do not write a file)
@@ -79,3 +80,7 @@ APPROVED — safe to merge | CHANGES REQUESTED
 APPROVED requires: requirements traced (when specs exist), tests cover & pass, the
 `/security-review` surfaced no high/medium-confidence blocker/major, and no other
 high/medium-confidence blocker or major finding.
+
+Length: one line per finding, and drop a section that has nothing in it rather than
+writing "none found" under every heading. The verdict is read by someone deciding whether
+to merge — give them the decision and the blockers, not a report about the report.
