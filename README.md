@@ -19,6 +19,7 @@ Diab Neiroukh's Claude Code plugins in one place. Add the marketplace once, then
 | [`realfavicon-mcp`](./realfavicon-mcp) | Generate, check, and track favicons via RealFaviconGenerator, over MCP. |
 | [`offshore`](./offshore) | Run a local abliterated model to answer prompts Claude refuses, over MCP. |
 | [`prompt-engineering`](./prompt-engineering) | Turn a description into an optimized, ready-to-paste LLM prompt, grounded in the promptingguide.ai guide. Works offline via a bundled reference. |
+| [`prompting-claude`](./prompting-claude) | Optimise or migrate a prompt for a specific Claude model, tuned to that model's documented behaviour: the Claude 5 generation (Fable 5, Mythos 5, Opus 5, Sonnet 5) and Opus 4.8. Grounded in Anthropic's prompting docs, bundled for offline use. |
 | [`fableplan`](https://github.com/lzlrd/fableplan) | Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup. Toggle with `/fableplan`. |
 | [`reload-claude-md`](./reload-claude-md) | Re-read your edited `CLAUDE.md` files from disk and re-anchor the running session to their current content, so mid-session edits take effect without a restart. Read-only; invoke with `/reload-claude-md`. |
 | [`export-skills`](./export-skills) | Work out which locally-installed skills can run in Claude Desktop / claude.ai, then package the qualifiers into upload-ready zips. Lenient by default; `--strict` drops the sandbox skills. Invoke with `/export-skills`. |
