@@ -48,26 +48,16 @@ and it is per-user, so never assume it.
 
 ### 2. Classify — cluster first, then fan out only the ambiguous ones
 
-Don't blindly spawn one sub-agent per skill — a real install is dozens (often 80+), and most are
-obvious. Classify inline the ones you can decide from `SKILL.md` alone: pure-prompt/artifact skills
-clearly run in Desktop; skills whose only tools are Claude-Code-dev tooling (plugin-dev, hooks,
-settings) clearly don't. Then **cluster the rest by shared dependency** — group skills that need the
-same MCP or the same local-shell capability — and classify each cluster once (the
-**identical dependency ⇒ identical verdict** rule in Normalize makes this sound). Only fan out
-sub-agents for the genuinely borderline skills that survive that pass, and **cap concurrency**
-(≈8 at a time) so a large install doesn't spawn a hundred agents. Each sub-agent gets its `SKILL.md`
-path and the Desktop MCP list, and returns the structured verdict from `references/process.md`
-(verdict, category, requires_local_shell, cc_only_tools, mcp_needed, what_it_does, reason). A skill
-qualifies only if all three criteria hold: it runs in Desktop, it is relevant to Desktop, and any
-MCP it needs is in the Desktop list (or it degrades gracefully without it).
+Classify inline what `SKILL.md` alone decides, cluster the rest by shared dependency, and delegate
+only the genuinely borderline skills to sub-agents (cap ≈8 concurrent) — the classifier schema,
+inputs, and qualifying criteria are in `references/process.md` Phase 2. Dispatch the borderline
+batch and keep working while it runs — normalize the inline verdicts and re-derive MCP availability
+in the meantime rather than blocking on each sub-agent's return.
 
 ### 3. Normalize — your judgment
 
-Reviewer verdicts drift; make them consistent. Re-derive MCP availability yourself: normalize each
-name and set-difference it against the Desktop list (aliases such as `offload`→`offshore`,
-tool-prefix→server). Apply the rule **identical dependency ⇒ identical verdict**. Read the borderline
-`SKILL.md` files yourself before overriding a verdict. Never drop a skill silently because a reviewer
-failed or was rate-limited; classify it from a sibling with the same dependency, or read it directly.
+Normalize the verdicts yourself: re-derive MCP availability against the Desktop list, apply
+**identical dependency ⇒ identical verdict**, and never drop a skill silently (Phase 3).
 
 ### 4. Apply the mode
 
@@ -76,10 +66,7 @@ under strict. Nothing else moves between the two.
 
 ### 5. Tier the qualifiers
 
-Group them for the report: **A** ready as-is (pure prompt / guidance / artifact), **B** needs the
-sandbox (lenient only), **C** needs a named Desktop MCP (confirm it is in *their* config), **D** works
-but output-limited (e.g. an image-direction skill when Desktop has no image generation). Group the
-**excluded** by reason: CC dev/config tooling, needs the local shell/project, needs a missing MCP.
+Tier the qualifiers **A–D** and group the excluded by reason (Phase 5).
 
 ### 6. Package — `scripts/package.py`
 
@@ -97,23 +84,19 @@ Manifest shape:
             {"kind": "personal", "plugin": null, "name": "deep-research", "skill_dir": "/abs/path"}]}
 ```
 
-It curates each skill (SKILL.md plus resource dirs; repo noise like `.git`, `tests`, `node_modules`,
-`.claude-plugin` dropped) and writes **one zip per skill** (`<skill>/SKILL.md` at the root; plugin
-skills get a `<plugin>-<skill>.zip` filename so same-named skills from different plugins do not
-collide). It verifies every zip: SKILL.md at the root, the biggest members listed so un-curated bloat
-stands out, credential-ish names flagged, and the **200-file upload limit** enforced (a skill over
-the limit is flagged to trim, since a single skill cannot be split across uploads).
+It curates each skill, writes **one zip per skill** with `SKILL.md` at the root, and verifies every
+zip — the keep/drop lists, naming rules, and the 200-file upload limit are in Phase 6.
 
 ### 7. Report
 
 Give the user the tiered report, the path to the zips, and how to upload: on claude.ai, upload each
-per-skill zip on its own. The SKILL.md-at-root invariant is what makes that work.
+per-skill zip on its own. The SKILL.md-at-root invariant is what makes that work. Keep the report
+compact: one line per skill within each tier (name — reason/needed MCP), a one-line count per tier,
+and no restatement of the criteria, modes, or process. Every count and verdict must trace to this
+session's output — inventory.py's totals, the classifier verdicts, package.py's verify listing; if
+a skill's status wasn't actually determined, say so rather than filling it in.
 
 ## Notes
 
-- The two scripts own Phases 0 and 6 (the trap-ridden, deterministic parts) so they run the same way
-  every time. You own Phases 1 to 5, which are judgment.
-- Built-in Claude Code skills (`verify`, `run`, `code-review`, `init`, `simplify`, …) have no file on
-  disk and are not exportable; the inventory will not list them, and that is correct.
 - Keep the two scripts' keep/drop lists aligned if you edit them; `inventory.py` reports resource
   dirs and `package.py` ships them.
