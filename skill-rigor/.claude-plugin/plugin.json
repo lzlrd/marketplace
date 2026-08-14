@@ -1,0 +1,10 @@
+{
+  "name": "skill-rigor",
+  "version": "1.0.0",
+  "description": "Quality gate for Claude Code skill authoring: whenever a skill is being created or edited, the work runs at maximum reasoning effort — via the bundled max-effort skill-rigor agent (inheriting the session's model) when the session runs lower — and the result is cross-checked against the skill-creator and skill-development skills when installed, degrading gracefully when they're absent. Auto-engages via the 'skill-rigor' skill on any SKILL.md or skills/ work; slash-available as /skill-rigor:skill-rigor.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/skill-rigor",
+  "repository": "https://github.com/lzlrd/marketplace",
+  "keywords": ["skills", "skill-authoring", "effort", "quality-gate", "skill-creator", "skill-development"]
+}
