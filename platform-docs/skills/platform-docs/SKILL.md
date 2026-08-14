@@ -9,16 +9,17 @@ description: >
   minimum-OS-version or deployment-target compatibility, or "which native API should I use for
   X" on any of these platforms — even when the platform isn't named explicitly but the code
   clearly targets one (`import UIKit`, `import SwiftUI`, `using Microsoft.UI`, `androidx.*`,
-  `.xcodeproj`, `.xcworkspace`, `AndroidManifest.xml`). Trigger even for platform questions that
-  feel "well known" — OS APIs change every release (WWDC, Build, Google I/O) and training data
-  goes stale fast, so check the live docs MCP before answering from memory.
+  `.xcodeproj`, `.xcworkspace`, `AndroidManifest.xml`). Use it especially when the answer depends
+  on the current API surface — anything shipped, changed, or deprecated in recent OS releases
+  (WWDC, Build, Google I/O), or where minimum-OS availability matters.
 ---
 
 # Platform Docs (Apple · Windows · Android)
 
-Native-platform SDKs move fast and deprecate aggressively. Before answering a platform-API
-question from memory, check the matching vendor's documentation MCP — it's one tool call away
-and is current as of today, not as of training.
+Native-platform SDKs move fast and deprecate aggressively. Check the matching vendor's
+documentation MCP whenever the answer could have changed since training — recently shipped or
+changed APIs, deprecations, or OS-version availability — it's one tool call away and current
+as of today.
 
 ## How to use
 
@@ -27,13 +28,14 @@ and is current as of today, not as of training.
    `.csproj`), or ask once if it's genuinely ambiguous and the answer depends on it.
 2. **Read the matching reference file below — only that one.** Each covers its platform's MCP
    tools, when to reach for which, and the fallback if that MCP isn't connected.
-3. **Verify before answering.** Use the tools to confirm current API names, availability, and
-   sample usage rather than asserting from training data, especially for anything shipped or
-   changed in the last year or two.
+3. **Verify before answering.** Confirm current API names, availability, and sample usage with
+   the tools, especially for anything shipped or changed in the last year or two. When the user
+   cares about a minimum OS version, also confirm the API is available on that deployment
+   target, not just that it exists.
 4. **Third-party libraries are a different skill.** A specific CocoaPod, Swift Package, Gradle
    dependency, or NuGet package used *inside* one of these apps is not an OS API — that's the
-   sibling `library-docs` skill (Context7-backed). Let both trigger together when relevant; don't
-   duplicate library-specific lookups here.
+   sibling `library-docs` skill (Context7-backed). First-party platform APIs resolve here;
+   third-party libraries resolve there — consult both only when a question genuinely spans both.
 
 ## Platforms
 
@@ -46,14 +48,3 @@ and is current as of today, not as of training.
 Reach for the platform's MCP first; if its tools aren't available in this session, fall back
 silently — never tell the user an MCP is missing as though it blocks the answer. Each reference
 file names the fallback (WebFetch/WebSearch against the vendor's own docs site).
-
-## Common mistakes to avoid
-
-- **Answering from memory when the MCP is connected and one call away.** Platform APIs are
-  exactly the kind of fact that goes stale between training cutoffs.
-- **Loading more than one reference file for a single-platform question.** Read the one that
-  matches; don't front-load all three.
-- **Treating a third-party library question as a platform-API question.** OS/SDK-level APIs live
-  here; everything else is `library-docs`.
-- **Skipping platform-compatibility checks** when the user cares about a minimum OS version —
-  an API that exists doesn't mean it's available on their deployment target.
