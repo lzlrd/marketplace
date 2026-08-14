@@ -24,7 +24,7 @@
     {
       "name": "4man",
       "source": "./4man",
-      "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features — or stands up a whole new codebase — in the requestor's own style, run as a Claude Code agent team. Auto-engages for feature and new-project work; also exposes /4man:code-review. Requires the experimental agent-teams feature (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).",
+      "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features — or stands up a whole new codebase — in the requestor's own style, run as a Claude Code agent team whose teammates coordinate through the shared task list and mailbox. Auto-engages for feature and new-project work; also exposes /4man:code-review. Requires the experimental agent-teams feature (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).",
       "category": "workflow"
     },
     {
@@ -42,7 +42,7 @@
     {
       "name": "prompt-engineering",
       "source": "./prompt-engineering",
-      "description": "Turn a description into an optimized, ready-to-paste LLM prompt for a Gemini Gem, Claude Project, or custom GPT, grounded in the promptingguide.ai guide — a bundled distilled reference for offline use, plus the NotebookLM MCP for live sources when connected. Auto-engages when you write or refine a prompt.",
+      "description": "Turn a description into an optimized, ready-to-paste LLM prompt for a Gemini Gem, Claude Project, or custom GPT, grounded in the promptingguide.ai guide — a bundled distilled reference for offline use, plus the NotebookLM MCP for live sources when connected. Returns only the finished prompt; named-Claude-model targets defer to prompting-claude when installed. Auto-engages when you write or refine a prompt.",
       "category": "workflow"
     },
     {
@@ -78,7 +78,7 @@
     {
       "name": "library-docs",
       "source": "./library-docs",
-      "description": "Fetches current, version-accurate documentation for any third-party library, framework, SDK, API, or CLI tool via Context7, with a web fallback when it isn't connected. Auto-engages whenever a question is anchored to a specific library or framework.",
+      "description": "Fetches current, version-accurate documentation for any third-party library, framework, SDK, API, or CLI tool via Context7, with a web fallback when it isn't connected. Auto-engages when a question depends on a specific library's current API, configuration, or version behavior.",
       "category": "workflow"
     },
     {

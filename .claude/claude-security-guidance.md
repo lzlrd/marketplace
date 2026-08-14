@@ -4,7 +4,7 @@ Repo-wide security policy for the `lzlrd` marketplace and the plugins it ships. 
 
 ## Scope
 
-The marketplace vendors eleven plugins as source (`mempalace-hooks`, `system-design`, `4man`, `realfavicon-mcp`, `offshore`, `prompt-engineering`, `reload-claude-md`, `export-skills`, `platform-docs`, `library-docs`, `semver`) and tracks `fableplan` as a submodule (twelve in all). The ones with a real security surface: two MCP servers that run code on Bun (`realfavicon-mcp`, `offshore`), one plugin that registers shell hooks (`mempalace-hooks`), and one that ships local Python scripts (`export-skills`). The rest are skills and command/agent definitions with no runtime of their own. The sections below cover the parts that matter.
+The marketplace vendors the plugins listed in `.claude-plugin/marketplace.json` (most as in-repo source, `fableplan` as a submodule) — that manifest is the roster; don't restate it here. The ones with a real security surface: two MCP servers that run code on Bun (`realfavicon-mcp`, `offshore`), one plugin that registers shell hooks (`mempalace-hooks`), and one that ships local Python scripts (`export-skills`). The rest are skills and command/agent definitions with no runtime of their own. The sections below cover the parts that matter.
 
 ## realfavicon-mcp
 
