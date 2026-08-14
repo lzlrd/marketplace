@@ -42,8 +42,7 @@ imports).
    } | awk 'NF && !seen[$0]++'
    ```
 
-   (The `find` is bounded at 6 levels — deep enough for real project trees, cheap enough to
-   run anywhere; pass an explicit path as the argument if a file lives deeper.)
+   (If a file lives deeper than 6 levels, pass its path as the argument.)
 
    (Load order is not critical here — the goal is to find every file so the diff is complete.
    System/enterprise-managed memory is intentionally left alone.)
@@ -56,7 +55,10 @@ imports).
 
 4. **Diff against the session-start version.** Compare what you just read to the `CLAUDE.md` content
    loaded into your context at the start of this session (the user-instructions / codebase-memory
-   block). Identify, per file: rules **added**, **removed**, and **changed**.
+   block). Identify, per file: rules **added**, **removed**, and **changed**. A file with no
+   session-start copy in your context (e.g., a nested CLAUDE.md that was never loaded, or a file
+   created mid-session) has no baseline: skip the diff, report it as newly in effect, and adopt
+   it whole.
 
 5. **Re-anchor.** Treat the freshly-read content as the authoritative instructions from here on,
    overriding the stale session-start copy wherever they differ. Changed rules take their new form
@@ -67,7 +69,9 @@ imports).
 
 6. **Report concisely.** For each file that changed, give a short bullet list of the delta (added /
    removed / modified). Do not paste whole files back — just the changes, then one line confirming
-   you are now following the current version.
+   you are now following the current version. (Step 5's RETRACTED restatements are the exception:
+   quote a short removed rule verbatim; for a large removed block, name the block and restate its
+   operative directives rather than the whole text.)
 
 ## Edge cases
 
