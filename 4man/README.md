@@ -13,7 +13,7 @@ You: "add rate limiting to the login endpoint"      (no command)
    Planner   (teammate) ─▶ .pipeline/specs.md ─▶ seeds the shared task list
    Coder ×N  (teammates, parallel) ─▶ edit the code, claim tasks, message at seams
    Tester ×N (teammates, parallel) ─▶ write and run tests, report on the task list
-   lead ─▶ one /security-review (+ claude-security-guidance.md)
+   lead ─▶ one security pass (claude-security scan if installed, else /security-review)
    Reviewer + compliance + correctness  (teammates, parallel) ─▶ .pipeline/verdict.md
 ```
 
@@ -135,25 +135,34 @@ hand-edit.
 ## Security
 
 In the review stage (and in `/4man:code-review`) the lead bootstraps `claude-security-guidance.md`
-if the workspace has no security policy (a committed, codebase-specific file), then runs
-`/security-review` once on the diff and hands the findings to the Reviewer. If `/security-review`
-is unavailable, the Reviewer does a focused manual pass.
+if the workspace has no security policy (a committed, codebase-specific file), then runs a single
+security pass on the diff and hands the findings to the Reviewer. With the **claude-security**
+plugin installed (from `claude-plugins-official`) and your go-ahead — its scan can take a while
+and uses a significant number of tokens, so 4man asks first — that pass is its deep changes scan:
+multi-agent research plus an adversarial verifier panel, which leaves a gitignored
+`CLAUDE-SECURITY-<timestamp>/` report directory in the repo. Otherwise it is one `/security-review`
+run; if neither is available, the Reviewer does a focused manual pass. The deep scan covers
+committed changes only, so `/4man:code-review` offers it for committed targets (a branch, a PR, a
+range, a commit) and keeps `/security-review` for uncommitted ones.
 
 ## Companion plugins & integrations
 
 4man works standalone; these make it better when present. Each is optional, and 4man degrades
 gracefully without it.
 
-Two are worth installing. **claude-code-setup** (from `claude-plugins-official`) supplies
+Three are worth installing. **claude-code-setup** (from `claude-plugins-official`) supplies
 `/claude-code-setup:claude-automation-recommender`, the new-project recommendation pass in
 Step 0.5. **security-guidance** (from `claude-plugins-official`) is the
-`claude-security-guidance.md` convention the review bootstraps before `/security-review`.
+`claude-security-guidance.md` convention the review bootstraps before the security pass.
+**claude-security** (from `claude-plugins-official`) upgrades that pass to a panel-verified deep
+scan, with your consent to its cost.
 
 | Integration | Kind | Used for | Without it |
 |---|---|---|---|
 | `/claude-code-setup:claude-automation-recommender` | skill (claude-code-setup) | new-project automation recommendations | skipped silently |
 | `security-guidance` / `claude-security-guidance.md` | convention (security-guidance) | the committed security policy the review bootstraps | 4man writes a starter policy itself |
-| `/security-review` | built-in command | the single security pass in review | Reviewer does a focused manual pass |
+| `claude-security` deep scan | plugin (claude-plugins-official) | the security pass on committed diffs — panel-verified, needs your cost go-ahead | one `/security-review` run |
+| `/security-review` | built-in command | the security pass otherwise | Reviewer does a focused manual pass |
 | `/prompt-engineering:prompt-engineering` | skill (this marketplace) | optionally sharpen teammate briefs | briefs sent as-is |
 | `/humanizer:humanizer` | skill (this marketplace) | de-AI crew-authored prose (commit messages, PR body, docs) | prose committed as written |
 | `mempalace` MCP (or `mempalace` CLI) | memory | off-disk style profile (`coding-style`/`writing-voice`) + `working-prefs` | derived from your human-authored commits |
@@ -169,7 +178,7 @@ review teammates in parallel — the Reviewer and its two sibling reviewers:
   spec edge cases.
 
 Teammates can't spawn teammates, so the compliance and correctness reviewers message their reports
-straight to the Reviewer. It folds in those reports, the `/security-review` findings, its own diff
+straight to the Reviewer. It folds in those reports, the security findings, its own diff
 pass, and a style-drift check against your profile, tags each finding with severity and confidence,
 drops likely false positives, and issues APPROVED or CHANGES REQUESTED.
 
@@ -187,8 +196,9 @@ Review an arbitrary diff, branch, or PR through the same read-only review team:
 
 With no argument it reviews the **pending changes on the current branch** — the same scope
 `/security-review` covers, so the two passes line up. It bootstraps the security guidance, runs one
-`/security-review`, spawns the compliance and correctness reviewers as teammates alongside the
-Reviewer, and returns a confidence-scored verdict. It needs agent teams enabled, like the full crew.
+security pass (the claude-security deep scan on a committed target when installed and you approve
+its cost, else `/security-review`), spawns the compliance and correctness reviewers as teammates
+alongside the Reviewer, and returns a confidence-scored verdict. It needs agent teams enabled, like the full crew.
 For a PR (via the GitHub MCP, else `gh`) it offers to post the findings as inline comments, only
 after you confirm.
 

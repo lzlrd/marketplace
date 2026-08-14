@@ -1,5 +1,5 @@
 ---
-description: Review a diff, branch, or PR with the 4man Reviewer — runs one /security-review (bootstrapping claude-security-guidance.md first) and spawns CLAUDE.md-compliance and correctness reviewers as teammates in parallel, returning a confidence-scored verdict. Read-only; never modifies code. Requires agent teams.
+description: Review a diff, branch, or PR with the 4man Reviewer — runs one security pass (the claude-security deep scan when installed, approved, and the target is committed; else /security-review; bootstrapping claude-security-guidance.md first) and spawns CLAUDE.md-compliance and correctness reviewers as teammates in parallel, returning a confidence-scored verdict. Read-only; never modifies code. Requires agent teams.
 argument-hint: "[empty = pending changes on current branch | PR number | branch | 'staged' | 'working' | 'HEAD~N' | range]"
 ---
 
@@ -31,7 +31,24 @@ If you cannot resolve a target, ask the user once.
    stack. It's a committed project policy — writing it is intended. If the repo
    `.gitignore`s `.claude/`, note it and place the file where it'll be tracked (or tell
    the user).
-2. **Run `/security-review` once** and capture its findings. `/security-review` reviews the
+2. **Prefer the claude-security deep scan when it fits.** If the `claude-security` plugin is
+   installed (the `claude-security:claude-security` agent type is spawnable) **and** the
+   resolved target is committed work its changes scan accepts — the current branch's commits
+   against a base (a branch target, a checked-out PR, `HEAD~N`) or a single commit — ask once
+   with AskUserQuestion (header "Security pass"): **"Deep scan (claude-security)"** —
+   panel-verified; may take a while and use a significant number of tokens — vs **"Fast pass
+   (/security-review)"**. An uncommitted target (empty/pending, `staged`, `working`), an absent
+   plugin, or a "Fast pass" answer → step 4.
+3. **Deep scan.** Spawn the **`claude-security:claude-security`** agent with: the job — scan
+   this branch's changes against `--base <resolved base>` (or `--commit <sha>` for a single
+   commit); the user's cost acceptance relayed in their own words (quote their menu choice —
+   the scan's fixed start confirmation needs it); and an instruction to report back the
+   surviving findings (file:line, severity, what the panel concluded), the stamped
+   verification status, and the report directory path. It drives the whole scan itself and
+   leaves a self-gitignored `CLAUDE-SECURITY-<timestamp>/` report directory in the repo — an
+   artifact, not a code change. Its findings are already adversarially verified: hand them to
+   the Reviewer marked as such. If the spawn or the scan fails, say so and fall back to step 4.
+4. **Fast pass — run `/security-review` once** and capture its findings. `/security-review` reviews the
    **pending changes on the current branch**, so it lines up with the default (empty) target
    directly. For an explicit non-current-branch target (a PR, a range, another branch): if the working
    tree is clean, check the target out so `/security-review` sees the same code, restoring the
@@ -43,7 +60,8 @@ If you cannot resolve a target, ask the user once.
 
 ## Review — all teammates
 Spawn three teammates in parallel on the resolved diff: the **4man:reviewer** (hand it the
-base/range and the `/security-review` findings), the **4man:compliance-reviewer**, and the
+base/range and the security findings — saying which engine ran, and, for the deep scan, that
+they arrived panel-verified), the **4man:compliance-reviewer**, and the
 **4man:correctness-reviewer**. Teammates cannot spawn teammates, so the compliance and correctness
 reviewers **message their reports directly to the Reviewer**; it folds in the security findings and
 both reports, scores by severity and confidence, and returns the verdict. There is no spec here, so

@@ -83,7 +83,12 @@ The crew is a team, not a chain of file hand-offs. What that changes:
   conflicts — two units that contradict each other or a constraint, or anything the spec
   mandates that the review rubric would treat as a defect (an assertion-free test, a
   verbatim-duplicated block). Surface everything as **one batched question** before coding
-  starts, not one interrupt per discovery. Clean scan → proceed.
+  starts, not one interrupt per discovery. Clean scan → proceed. If the `claude-security`
+  plugin is installed, fold one more item into this same batched question: whether to use its
+  **deep verified changes scan** as the Step-5 security pass — it may take a while and use a
+  significant number of tokens (the exact acceptance its start confirmation needs). Collect
+  the yes/no now, while the user is present; no yes collected means Step 5 uses
+  `/security-review`.
 - **Sharpen briefs with prompt-engineering when available (optional).** If the
   `prompt-engineering` plugin is installed, you may pass a teammate's spawn brief through
   `/prompt-engineering:prompt-engineering` to tighten it — worth it for a gnarly unit or a
@@ -267,16 +272,28 @@ commit, run the single security pass, then spawn the review team.
    units (Step 3) — make any final integration commit. In **feature-dev** mode this is the single
    commit for the run. These commits are the diff the Reviewer reads and, in PR mode, what you
    push; a CHANGES-REQUESTED re-run just adds follow-up commits.
-4. **Single security pass.** Run **`/security-review` once** on this run's changes (the branch's
-   commits since the Step 0 start commit; in PR mode, the whole branch vs `<default-branch>`).
-   *You* (the lead) run it — it's a top-level command teammates can't invoke; capture its findings.
-   If `/security-review` isn't available in this version, say so and have the Reviewer do a focused
-   manual security pass instead.
+4. **Single security pass.** The run's work is committed by now, so both engines apply; *you*
+   (the lead) run whichever one — teammates can't invoke either.
+   - **Deep scan** — when the `claude-security` plugin is installed (the
+     `claude-security:claude-security` agent type is spawnable) and the user accepted its cost
+     in the pre-flight batched question: spawn that agent with the job — scan this branch's
+     changes, `--base <the review base: the Step 0 start commit; in PR mode <default-branch>>`
+     — plus the user's cost acceptance relayed in their own words (the scan's fixed start
+     confirmation needs it) and an instruction to report back the surviving findings, the
+     stamped verification status, and the report path. It leaves a self-gitignored
+     `CLAUDE-SECURITY-<timestamp>/` report directory — an artifact, not part of the diff — and
+     its findings arrive panel-verified. If the spawn or the scan fails, fall through to the
+     next bullet.
+   - **Else run `/security-review` once** on this run's changes (the branch's commits since the
+     Step 0 start commit; in PR mode, the whole branch vs `<default-branch>`); capture its
+     findings. If it isn't available either, say so and have the Reviewer do a focused manual
+     security pass instead.
 5. **Review — all teammates.** Spawn three teammates in parallel: the **`4man:reviewer`**, the
    **`4man:compliance-reviewer`**, and the **`4man:correctness-reviewer`**, each on the diff
    (base = the Step 0 start commit in in-place mode; the merge-base of HEAD with `<default-branch>`
    in PR mode — so the verdict covers the whole PR, not just this run). Hand the Reviewer the
-   `/security-review` findings and the **`## Author & style profile`** block (1a) for its
+   security findings (saying which engine ran and, for the deep scan, that they arrived
+   panel-verified) and the **`## Author & style profile`** block (1a) for its
    style-drift check. Teammates cannot spawn teammates, so the compliance and correctness reviewers
    **message their reports directly to the Reviewer** (the mailbox); the Reviewer does its own
    diff/traceability + style-drift pass, folds in the security findings and both reports, scores by
