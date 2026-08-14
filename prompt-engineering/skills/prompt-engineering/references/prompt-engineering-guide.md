@@ -50,8 +50,8 @@ Tune **one of each opposing pair**, not both. Prompt first; adjust these only wh
 | :-- | :-- | :-- |
 | **Zero-shot** | Instruction only, no examples; relies on the model's pretraining + instruction tuning. | Common, foundational tasks (classification, summarization, extraction) the model already understands. Always try this first. |
 | **Few-shot** | Include 1 to N input→output demonstrations to enable in-context learning. | When zero-shot fails, when you need an exact format/tone/label, or the task is nuanced. Examples should be representative, well-formatted, and diverse; label space and input distribution matter. |
-| **Chain-of-Thought (CoT)** | Elicit intermediate reasoning steps before the answer. **Few-shot CoT:** show worked examples. **Zero-shot CoT:** append "Let's think step by step." | Complex arithmetic, commonsense, or symbolic reasoning where direct answers are wrong. |
-| **Self-consistency** | Sample multiple diverse CoT reasoning paths, take the majority/most-consistent answer (replaces greedy decoding). | Hard reasoning tasks where accuracy is critical and one sample is unreliable. |
+| **Chain-of-Thought (CoT)** | Elicit intermediate reasoning steps before the answer. **Few-shot CoT:** show worked examples. **Zero-shot CoT:** append "Let's think step by step." | Complex arithmetic, commonsense, or symbolic reasoning where direct answers are wrong. Non-reasoning-model targets only — for reasoning models (the default tier) see §7 and keep the prompt direct. |
+| **Self-consistency** | Sample multiple diverse CoT reasoning paths, take the majority/most-consistent answer (replaces greedy decoding). | Hard reasoning tasks where accuracy is critical and one sample is unreliable. An orchestration-level technique (multiple API samples) — not a line to put inside a Gem/Project prompt; the same §7 gating applies. |
 
 ---
 
