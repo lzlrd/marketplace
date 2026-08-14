@@ -5,14 +5,13 @@ description: >-
   branding are involved. Trigger it when the user asks to "generate favicons",
   "add a favicon", "create a favicon set", "turn my logo into favicons/app
   icons", "make icons from this logo/SVG/PNG", "set up site.webmanifest / PWA
-  icons / apple-touch-icon", or "check/audit my favicon". Also use it
-  proactively when building, scaffolding, or finishing any website or landing
-  page (a site needs a correct favicon set), and when producing branding assets
-  from a logo. It drives the realfavicon-mcp MCP tools (realfavicon_generate,
+  icons / apple-touch-icon", or "check/audit my favicon". Also use it when a
+  website being built or shipped is missing a proper favicon set, or when
+  producing app-icon assets from a logo. It drives the realfavicon-mcp MCP tools (realfavicon_generate,
   realfavicon_check, realfavicon_changelog) to build a complete favicon and
   app-icon set plus ready-to-paste <head> markup from one master image, audit a
   live page's favicon setup, and track RealFaviconGenerator changes.
-version: 1.0.1
+version: 1.0.2
 ---
 
 # Favicons
@@ -38,7 +37,7 @@ tool name may be prefixed, e.g. `mcp__…__realfavicon_generate`). If the
 is installed but its **bundled MCP server didn't start** — check that Bun (>=1.3)
 is on `PATH` and that dependencies fetched, and look at the server's stderr. Only
 if the plugin is genuinely missing, install it (`/plugin install
-realfavicon-mcp@lzlrd`). Either way, don't fall back to hand-writing favicon tags.
+realfavicon-mcp@lzlrd`).
 
 ## Core workflow: logo → wired-up favicons
 
@@ -161,12 +160,3 @@ older site's favicons, or to decide whether regeneration is worthwhile.
 Pass `since` (a prior RFG version like `"0.8.3"`) to get only newer changes. If it comes
 back `up_to_date`, the existing markup still follows current recommendations; otherwise
 summarise what changed and offer to regenerate.
-
-## Common mistakes to avoid
-
-- Hand-writing favicon `<link>` tags or resizing PNGs manually — generate them.
-- `path` not matching where files are served (icons/manifest 404).
-- Leaving stale favicon links in `<head>` alongside the freshly generated ones.
-- Passing a non-hex `theme_color`/`background_color` — they must be hex.
-- A tiny or non-square master image — sharpness and crops suffer; use ≥512×512.
-- Expecting a `theme-color` meta tag from the generator — add it manually.
