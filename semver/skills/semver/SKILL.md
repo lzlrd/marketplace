@@ -6,8 +6,7 @@ description: >
   build-metadata suffixes and the special pre-1.0.0 (0.y.z) rules. Use whenever a version number is
   being chosen or bumped: cutting a release, tagging a git release, bumping package.json /
   plugin.json / Cargo.toml / pyproject.toml / a VERSION file, writing a CHANGELOG entry, or the user
-  asking "is this a major or minor bump" / "what version should this be." Trigger even without the
-  word "version" whenever a change is about to ship and its version field needs updating. NOT for
+  asking "is this a major or minor bump" / "what version should this be." NOT for
   writing the changelog prose itself or deciding whether to release at all — only for picking the
   number once a change is being versioned.
 ---
@@ -18,12 +17,8 @@ Decide the next version number the way Semantic Versioning 2.0.0 (semver.org) ac
 not by feel. Grounded in a bundled distilled copy of the spec (`references/semver-spec.md`) — this
 works identically online or offline, there is no live source to fall out of sync with.
 
-## When this applies
-
-Anytime a version field is about to change: a release, a git tag, a `package.json` / `plugin.json` /
-`Cargo.toml` / `pyproject.toml` / `VERSION` file bump, a CHANGELOG entry, or a direct question like
-"is this a major or minor bump." Decide the number; writing the changelog prose or deciding *whether*
-to ship at all are separate concerns.
+Decide the number; writing the changelog prose or deciding *whether* to ship at all are separate
+concerns.
 
 ## The decision procedure
 
@@ -77,6 +72,12 @@ one (`1.4.7` + breaking change → `2.0.0`, not `2.4.7`; `1.4.7` + feature → `
 - Full comparison algorithm and identifier-sort rules are in `references/semver-spec.md` — read it
   when you need to actually order/sort a list of versions, not just pick the next one.
 
+## Output
+
+State the bump level (MAJOR/MINOR/PATCH or no bump), the exact next version string, and the one
+rule from the table that decided it. A few sentences is the right size — this is a version
+decision, not a report.
+
 ## Worked examples
 
 - Added an optional `retries` parameter to an existing API call, old calls still work unchanged →
@@ -91,12 +92,6 @@ one (`1.4.7` + breaking change → `2.0.0`, not `2.4.7`; `1.4.7` + feature → `
 
 ## Common mistakes
 
-- **Bumping MAJOR for internal-only changes.** If nothing outside the project can observe the
-  difference, it isn't a MAJOR change — it may not need any bump at all.
-- **Calling a required addition MINOR.** "Added a field" isn't automatically backward compatible — it
-  only is if existing callers still work *without* supplying it.
-- **Forgetting a fix can be breaking.** If callers depend on the old (buggy) behavior, fixing it is a
-  MAJOR change whether or not it feels like one.
 - **Stalling in 0.y.z forever, or leaving 1.0.0 too long.** Zero-major is for genuine initial
   development; once real users depend on the API, move to `1.0.0` so MAJOR actually starts meaning
   something.
