@@ -6,8 +6,7 @@ exhaustive detail. Architectures are in role terms; each ends with the service m
 (**AWS · Azure · GCP**), with a **Cloudflare** line on the designs that are edge-native (the rest fit
 an edge-first platform poorly, and forcing a mapping would be exactly the trap step 4 warns against).
 For a real request, expand the relevant one with the user's actual numbers, map to *their* cloud, and
-run the full Well-Architected gate. If the user's `Interview Prep` workspace is available, fuller
-treatments (16 designs) live in its `Systems Design 101.md`.
+run the full Well-Architected gate.
 
 ## Table of contents
 1. URL shortener

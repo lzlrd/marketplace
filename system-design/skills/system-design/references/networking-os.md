@@ -2,9 +2,7 @@
 
 The lower-level facts that shape designs and surface in infra-flavored design discussions. Read when
 a design hinges on networking behavior (DNS routing, load-balancer layer, connection limits, TLS) or
-OS-level limits (file descriptors, ephemeral ports, kernel tunables). Condensed from the user's
-`Interview Prep/Linux and Networking/` deep-dives — if that workspace is available, go there for
-full detail.
+OS-level limits (file descriptors, ephemeral ports, kernel tunables).
 
 ## OSI model & the transport layer
 

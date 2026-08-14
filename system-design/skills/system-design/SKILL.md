@@ -10,8 +10,7 @@ description: >
   scalability, reliability, cost, or failure modes; is comparing clouds for a workload; or mentions
   Well-Architected pillars, edge/serverless architecture, system design, or distributed-systems
   patterns (caching, sharding, replication, messaging, event-driven, sagas, agentic-AI/LLM
-  systems). Trigger even without the words "system design" when the user is making architecture or
-  service-selection decisions. NOT for operating deployed resources, IaC, or pipeline failures.
+  systems). NOT for operating deployed resources, IaC, or pipeline failures.
 ---
 
 # System Design (AWS · Azure · Google Cloud · Cloudflare)
@@ -36,7 +35,8 @@ review and pressure-test an existing design · compare clouds for a workload · 
 lightweight ADR.
 
 **Won't:** write production application code (that's an implementation task — design the interfaces
-and stop) · call cloud APIs or provision/modify real infrastructure (a design is a document, not a
+and stop; when the `4man` plugin is installed, hand the settled design to its crew: this skill
+designs, 4man builds) · call cloud APIs or provision/modify real infrastructure (a design is a document, not a
 deployment) · pick a service by buzzword without saying *why it fits this problem* · design before
 the requirements and constraints are pinned. If a request lacks the constraints needed to design
 well, ask for them first — guessing scale or consistency needs produces a design that's confidently
@@ -107,8 +107,8 @@ write volume, no joins; ad-hoc relational queries would flip this").
 
 Each per-cloud reference file also carries a **live docs via MCP** note: if that cloud's
 documentation/knowledge MCP is connected, use it to confirm fast-moving facts — recent renames,
-current quotas, a newly shipped service — before finalizing a choice, the same MCP-first pattern
-`prompt-engineering` uses against NotebookLM. Fall back to the cheat-sheet silently when the MCP
+current quotas, a newly shipped service — before finalizing a choice. Fall back to the
+cheat-sheet silently when the MCP
 isn't connected or errors; never block a design on it.
 
 The default picks at a glance — the per-cloud files carry the "reach for instead when…" reasoning:
@@ -156,10 +156,10 @@ framework has it:
 - **Cost Optimization** — consumption-based where spiky, right-sized, no undifferentiated heavy lifting?
 - **Sustainability** (AWS & Google pillars; Azure folds it into cost/ops) — utilization high, managed services preferred, downstream impact minimized?
 
-For a full design, run the **design-quality self-review checklist** in
-`references/well-architected.md` — it catches requirement gaps, missing fault-tolerance,
-extensibility, and unstated tradeoffs, and the same file has each vendor's exact pillars and
-design principles for a framework-faithful review. **Cloudflare publishes no formal Well-Architected
+For a full design, `references/well-architected.md` carries each vendor's exact pillars and
+design principles for a framework-faithful review, plus a design-quality checklist of what a
+strong design covers — fold anything it surfaces into the pillar review rather than running it
+as a separate pass. **Cloudflare publishes no formal Well-Architected
 framework** — review a Cloudflare design against the same five shared themes above (its Reference
 Architecture library is the closest equivalent), as `references/well-architected.md` notes. For a
 quick service-choice answer, the pillar list above is gate enough. Either way, explicitly identify
@@ -185,7 +185,7 @@ Deliver a written design using the structure below.
 ## Architecture
 - Request path (client → edge → API → compute → data), async paths
 - API contract (key operations) and data model
-- A described diagram (components + arrows); offer to render it if a diagram tool is available
+- A described diagram (components + arrows)
 
 ## Service mapping (<cloud>)
 - Component → service, each with a one-line "why this, not <alternative>"
@@ -209,12 +209,9 @@ If a diagram tool (e.g. the `drawio-aws` MCP) is connected, offer to render the 
 picture carries an architecture better than prose. Otherwise describe it clearly enough to draw by
 hand.
 
-## Common mistakes to avoid
+## The cross-cloud trap
 
-- **Porting service names, not designs.** The clouds' "equivalents" differ in ways that change the design: Cosmos DB prices by RU and offers five consistency levels, DynamoDB doesn't; Pub/Sub is one service covering queue + fan-out + stream, SQS/SNS/Kinesis are three; a GCP load balancer is global anycast, an ALB is regional; Cloudflare Workers KV is eventually consistent and there's no managed event bus, so a design that leans on strong-read KV or SNS-style fan-out must be re-derived, not translated. Re-derive the choice from the requirement on the target cloud.
-- **Single points of failure.** One zone, one node, one queue with no DLQ. Walk the failure modes in step 5.
-- **Average-case sizing.** Capacity must cover peak (2–3× avg), not the average, or it falls over exactly when it matters.
-- **Mixing implementation into architecture.** Design the interfaces and data flow; don't drift into writing the handler code.
+**Porting service names, not designs.** The clouds' "equivalents" differ in ways that change the design: Cosmos DB prices by RU and offers five consistency levels, DynamoDB doesn't; Pub/Sub is one service covering queue + fan-out + stream, SQS/SNS/Kinesis are three; a GCP load balancer is global anycast, an ALB is regional; Cloudflare Workers KV is eventually consistent and there's no managed event bus, so a design that leans on strong-read KV or SNS-style fan-out must be re-derived, not translated. Re-derive the choice from the requirement on the target cloud.
 
 ## Reference files
 

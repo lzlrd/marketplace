@@ -114,7 +114,8 @@ The design-quality checklist below is cloud-agnostic and applies unchanged.
 
 Derived from Amazon's "System Design" functional competency behaviors — the traits that distinguish
 a strong design from a concerning one. They're cloud-agnostic; a strong design hits these on any
-vendor. Read each as "have I actually done this?"
+vendor. Use them to spot gaps while doing the pillar review — any unchecked item is a gap to fix or
+an accepted tradeoff to state.
 
 **Requirements & scope**
 - [ ] All requirements needed for a working solution are identified, and unclear ones were clarified rather than assumed silently.
