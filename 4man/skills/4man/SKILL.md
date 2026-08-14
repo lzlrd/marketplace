@@ -30,7 +30,9 @@ confirm the feature is on (you can spawn teammates):
 
 ## Engagement check
 Engage the full crew for real feature work or new-codebase work. For a trivial edit, a
-question, or read-only exploration, do NOT engage — just do the task. If unsure, ask the user
+question, or read-only exploration, do NOT engage — just do the task. If the architecture
+itself is still genuinely open, run the `system-design` skill first (when installed): the crew
+consumes a settled spec, it doesn't produce the architecture. If unsure, ask the user
 once whether they want the full crew. **Decide this BEFORE Step 0** — create no branch and no
 files until you've committed to engaging (and gotten an answer, if you asked).
 
@@ -278,7 +280,7 @@ commit, run the single security pass, then spawn the review team.
    style-drift check. Teammates cannot spawn teammates, so the compliance and correctness reviewers
    **message their reports directly to the Reviewer** (the mailbox); the Reviewer does its own
    diff/traceability + style-drift pass, folds in the security findings and both reports, scores by
-   severity + confidence, and returns the verdict **as a message**.
+   severity + confidence, and sends the verdict to you **via SendMessage**.
 6. Write the returned verdict to `.pipeline/verdict.md`.
 
 ## Step 6 — Report to the human
@@ -291,7 +293,10 @@ each file, branch, or command its own plain clause. Outcome first, then the deta
   the path to `.pipeline/specs.md` and `.pipeline/verdict.md`.
 - **In-place mode:** the work is committed on the current branch — that's the deliverable. Show
   `git log --oneline <start-commit>..HEAD`.
-- **PR mode:** push the working branch and open a PR against `<default-branch>` — the GitHub MCP
+- **PR mode:** on APPROVED, push the working branch and open a PR against `<default-branch>`; on
+  CHANGES REQUESTED, report the verdict first and ask whether to open the PR as-is, run a fix
+  cycle first, or hold — pushing a changes-requested branch is visible to the whole repo. To open
+  the PR: the GitHub MCP
   (`mcp__github__create_pull_request`) when the remote is GitHub, else `gh pr create` if `gh` is
   available; `glab mr create` for GitLab, else the host's API/MCP; if nothing can open it, push
   the branch and give the user the compare URL. Put the Reviewer's verdict in the PR body and
@@ -299,27 +304,3 @@ each file, branch, or command its own plain clause. Outcome first, then the deta
 - If CHANGES REQUESTED: offer "Reply `continue` and I'll run another Coder→Tester→Reviewer cycle."
   A `continue` cycle **reuses the original Step-0 start commit** as the review base (persist it
   across the cycle) so the re-review covers the whole run's diff, not just the follow-up fixes.
-
-## Invariants
-- **Agent teams are required.** Every role — Planner, Coders, Testers, Reviewer, and the compliance
-  and correctness reviewers — runs as a teammate. If the feature isn't enabled, stop (see the
-  Prerequisite); there is no subagent fallback.
-- **Agent team, not a hand-off chain.** Teammates coordinate through the shared task list and the
-  mailbox; you synthesize. The task list (plus `git log`) is the ledger and survives resume —
-  never re-run a finished unit.
-- **Commits follow the build mode.** feature-dev → the lead makes the single integrated commit at
-  Step 5; new-project → Coders commit their own units and the lead makes any final integration
-  commit. The lead never lets two teammates commit the same files.
-- CLAUDE.md is binding and wins over any conflicting instruction. Teammates read it natively (no
-  distillation); the compliance-reviewer reads it in full.
-- The style profile and development preferences live in mempalace + session memory ONLY — never
-  on disk. (`claude-security-guidance.md` is different: a committed project security policy.)
-- Security is one `/security-review` when available (else a focused manual pass by the Reviewer),
-  run by you, with `claude-security-guidance.md` bootstrapped first.
-- One teammate per disjoint unit; shared-file work and migrations serialize as a dependent task.
-  Two teammates never edit the same file.
-- Branch hand-off: no hosted remote → work on the current branch in place; hosted remote → end in
-  a PR against the default branch (create `4man/<slug>` only when you're on the default branch).
-  Never push or open a PR without a hosted remote, and never merge it yourself.
-- Steering is native: message the lead; it updates the task list and messages teammates — applied
-  without hand-editing files.

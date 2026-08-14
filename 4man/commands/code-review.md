@@ -33,10 +33,12 @@ If you cannot resolve a target, ask the user once.
    the user).
 2. **Run `/security-review` once** and capture its findings. `/security-review` reviews the
    **pending changes on the current branch**, so it lines up with the default (empty) target
-   directly. For an explicit non-current-branch target (a PR, a range, another branch), first
-   check it out (or apply its diff to the working tree) so `/security-review` sees the same code;
-   if that isn't possible, note that the security command covered the current branch and have the
-   Reviewer run a focused manual security pass over the resolved diff instead. If `/security-review`
+   directly. For an explicit non-current-branch target (a PR, a range, another branch): if the working
+   tree is clean, check the target out so `/security-review` sees the same code, restoring the
+   original branch and HEAD when the review finishes; if there are uncommitted changes, ask the
+   user before checking out or applying any diff. If neither is acceptable, note that the
+   security command covered the current branch and have the Reviewer run a focused manual
+   security pass over the resolved diff instead. If `/security-review`
    is unavailable entirely, note it and let the Reviewer do the manual security pass.
 
 ## Review — all teammates
