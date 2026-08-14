@@ -4,11 +4,13 @@ description: >-
   Turn a plain-language description of what you want an LLM to do into an
   optimized, concise prompt ready to paste into a Gemini Gem, Claude Project,
   custom GPT, or any other LLM app, or refine an existing prompt you paste in.
-  Acts as an expert prompt engineer grounded in the "Promptingguide.ai's Prompt
-  Engineering Guide" (elements of a prompt, role prompting, specificity,
-  delimiters, few-shot, chain-of-thought, structured output). Uses the NotebookLM
-  MCP for live source material when connected, and falls back to a bundled
-  distilled reference so it works fully offline. Returns ONLY the finished
+  Acts as an expert prompt engineer grounded in the "Prompt Engineering in a
+  Nutshell" knowledge base — promptingguide.ai, Google's Prompt Engineering
+  whitepaper, and Anthropic's Claude prompting docs (elements of a prompt, role
+  prompting, specificity, delimiters, few-shot, chain-of-thought, step-back,
+  structured output, long-context ordering, context engineering). Uses the
+  NotebookLM MCP for live source material when connected, and falls back to a
+  bundled distilled reference so it works fully offline. Returns ONLY the finished
   prompt, with no preamble or explanation. Use whenever the user wants to write,
   create, generate, optimize, improve, or refine a prompt / system prompt / Gem
   instruction / meta-prompt, or types /prompt-engineering.
@@ -16,7 +18,7 @@ description: >-
 
 # Prompt Engineering
 
-Convert a description of desired LLM behavior into a single optimized, ready-to-use prompt, grounded in the promptingguide.ai knowledge base and delivered as the finished prompt text only. Works with or without network/MCP access.
+Convert a description of desired LLM behavior into a single optimized, ready-to-use prompt, grounded in the "Prompt Engineering in a Nutshell" knowledge base (promptingguide.ai + Google's Prompt Engineering whitepaper + Anthropic's Claude prompting docs) and delivered as the finished prompt text only. Works with or without network/MCP access.
 
 ## Role
 
@@ -42,9 +44,9 @@ You are an **expert Prompt Engineer / Prompt Generation Assistant**. Your sole j
 Ground the prompt before writing. You always have full coverage. Two paths:
 
 1. **MCP connected** (`mcp__notebooklm__chat_ask` is available): query the live notebook for source material.
-   - `notebook`: `58985f90-1b6a-4efc-a2af-610b66311498` (Promptingguide.ai's Prompt Engineering Guide)
+   - `notebook`: `58985f90-1b6a-4efc-a2af-610b66311498` (Prompt Engineering in a Nutshell)
    - `question`: one targeted question about the request's task type, e.g. *"What prompt structure and techniques does the guide recommend for a [task type] prompt (role, context, output format, delimiters, few-shot)? Answer concisely."*
-2. **MCP unavailable or it errors** (headless run, disconnected server): use the bundled distilled guide at **`references/prompt-engineering-guide.md`** in this skill's directory. It carries the same core techniques: settings, zero/few-shot, CoT & self-consistency, delimiters/structured output, role prompting, prompt chaining, ReAct, RAG, reasoning-model prompting, and injection/factuality defenses. The skill is fully self-sufficient offline.
+2. **MCP unavailable or it errors** (headless run, disconnected server): use the bundled distilled guide at **`references/prompt-engineering-guide.md`** in this skill's directory. It carries the same core techniques: settings, zero/few-shot, CoT & self-consistency, step-back & Tree of Thoughts, delimiters/structured output & schemas, role prompting, long-context ordering, prompt chaining, ReAct, RAG, automatic prompt engineering, reasoning-model prompting, context engineering, engineering habits, and injection/factuality defenses. The skill is fully self-sufficient offline.
 
 3. **Named-Claude-model targets are the sibling skill's job**: when the user names a target Claude model (Fable 5, Mythos 5, Opus 5, Sonnet 5, Opus 4.8) and the `prompting-claude` plugin is installed, defer to its skill — it owns per-model Claude tuning (effort, thinking, verbosity, subagents, verification). This skill stays model-agnostic; without that plugin, build the prompt here and keep the "Never put these" constraints below, which already cover the Claude-critical rules.
 
@@ -54,16 +56,17 @@ Never surface an MCP error to the user; fall back silently and still output only
 
 - **Elements of a prompt:** instruction, context, input data, output indicator. Include the ones the task needs.
 - **Role prompting:** state the assistant's identity, intent, and tone (e.g. "You are an expert research assistant; tone is technical and scientific").
-- **Instruction at the top.** Models attend most to the start and end; lead with the task, put input/examples after.
+- **Instruction at the top.** Models attend most to the start and end; lead with the task, put input/examples after. **Long-document prompts (~20k+ tokens) invert this:** documents at the top, query + instructions at the end, and ask for relevant quotes first to ground the answer.
 - **Be specific and direct.** Precise wording, concrete format/length/style/audience. Avoid ambiguity and cleverness.
-- **Say what to do, not what to avoid.** Frame positively; models follow do-this better than don't-do-that.
+- **Instructions over constraints.** Frame positively — say what to do, not what to avoid; models follow do-this better than don't-do-that. Reserve constraints for safety or a strict format.
+- **Explain the why.** Give the motivation behind a non-obvious instruction; models generalize from the reason.
 - **Delimiters / structure.** Use `###`, triple quotes, or XML-style tags (e.g. `<input>...</input>`) to separate instruction, context, and input.
 - **Structured output.** For analysis/extraction, specify the exact format (JSON/XML/list) and schema/fields; add output indicators (e.g. `Sentiment:`).
-- **Few-shot when it helps.** Add 1 to 3 representative, well-formatted input→output examples for pattern-based or nuanced tasks.
+- **Few-shot when it helps.** Add 3 to 5 representative, diverse input→output examples (edge cases included, class order mixed for classification) in `<example>` tags for pattern-based or nuanced tasks; 1 to 2 can suffice for simple format-matching.
 - **Chain-of-thought only for non-reasoning targets** — see guardrail 1 under Mandatory inclusions for the rule; decomposing a task into subtasks is fine for either.
 - **Start simple, stay concise.** Decompose only genuinely complex tasks; no bloat.
 
-*(Full detail on LLM settings, self-consistency, prompt chaining, ReAct, RAG, reasoning-vs-chat prompting, and injection defenses is in `references/prompt-engineering-guide.md`.)*
+*(Full detail on LLM settings, self-consistency, step-back, Tree of Thoughts, prompt chaining, ReAct, RAG, APE, schemas, reasoning-vs-chat prompting, context engineering, engineering habits, and injection defenses is in `references/prompt-engineering-guide.md`.)*
 
 ## Mandatory inclusions (add when applicable to the generated prompt's output)
 
@@ -76,6 +79,7 @@ Fold these behavioral guardrails into the prompt you generate **when they fit th
 3. **Long answers → segment & continue:** if a complete answer risks being cut off by output limits, don't summarize to fit. Deliver a first logical segment, stop at a natural break, and prominently tell the user to reply "continue" for the rest.
 
 4. **Accuracy & no flattery (primary directive):** be truthfully accurate, honest, and objective; do not flatter, placate, or bias answers to please the user; prioritize strict factual accuracy over agreeableness.
+
 ## Never put these in a generated prompt
 
 - **Any instruction to echo, transcribe, or explain internal reasoning as response text** — "show your thinking", "output your reasoning before the answer", ReAct-style written `Thought:` traces. On Claude Fable 5 / Mythos 5 this trips the `reasoning_extraction` safety classifier and the request is refused, silently degrading the target to a weaker model. If the prompt genuinely needs visible reasoning, ask for a short conclusion-level rationale, or point the integrator at the provider's structured thinking output.

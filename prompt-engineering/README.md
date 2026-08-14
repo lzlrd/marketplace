@@ -3,8 +3,9 @@
 An expert prompt engineer for [Claude Code](https://github.com/anthropics/claude-code).
 Describe what you want an LLM to do in plain language and the skill returns a single
 optimized, ready-to-paste prompt for a Gemini Gem, a Claude Project, a custom GPT, or any
-other LLM app, or refines a prompt you paste in. It grounds every prompt in the
-promptingguide.ai prompt-engineering guide and hands back **only the finished prompt**, in a
+other LLM app, or refines a prompt you paste in. It grounds every prompt in a knowledge base
+spanning the promptingguide.ai guide, Google's *Prompt Engineering* whitepaper, and Anthropic's
+Claude prompting & context-engineering docs, and hands back **only the finished prompt**, in a
 copy-ready code block. There is no command to type.
 
 ```
@@ -42,8 +43,9 @@ Restart the session. Check: the `prompt-engineering` skill shows in the skills l
 
 ## Knowledge Base: online and offline
 
-The skill is grounded in the *"Promptingguide.ai's Prompt Engineering Guide"* NotebookLM
-notebook, and works either way:
+The skill is grounded in the *"Prompt Engineering in a Nutshell"* NotebookLM notebook
+(promptingguide.ai / DAIR.AI sources plus Google's *Prompt Engineering* whitepaper, the Google
+Cloud prompt-engineering guide, and Anthropic's Claude prompting docs), and works either way:
 
 - **MCP connected** (a NotebookLM MCP server providing `mcp__notebooklm__chat_ask`): it queries
   the live notebook for source material on the request's task type.
@@ -55,17 +57,21 @@ Either path yields the same quality of prompt.
 
 ## What it applies
 
-Straight from the guide:
+Straight from the knowledge base:
 
 - **Elements of a prompt:** instruction, context, input data, output indicator.
 - **Role prompting:** set the assistant's identity, intent, and tone.
-- **Instruction-first, specific, positive:** lead with the task; say what to do, not what to avoid.
+- **Instruction-first, specific, positive:** lead with the task; instructions over constraints —
+  and for long-document prompts, documents first, query at the end, quotes before answers.
+- **Explain the why:** give the motivation behind non-obvious instructions.
 - **Delimiters & structured output:** `###` / `"""` / XML-style tags; exact JSON/list schemas.
-- **Few-shot:** 1 to 3 representative examples for pattern- or tone-sensitive tasks.
+- **Few-shot:** 3 to 5 diverse, edge-case-covering examples for pattern- or tone-sensitive tasks.
 - **Chain-of-thought:** for reasoning-heavy tasks on standard models; kept direct for reasoning models.
 
-The bundled reference goes deeper (LLM settings, self-consistency, prompt chaining, ReAct, RAG,
-reasoning-vs-chat prompting, and prompt-injection / factuality defenses).
+The bundled reference goes deeper (LLM settings, self-consistency, step-back, Tree of Thoughts,
+prompt chaining, ReAct, RAG, automatic prompt engineering, input/output schemas, context
+engineering, engineering habits, reasoning-vs-chat prompting, and prompt-injection / factuality
+defenses).
 
 ## Structure
 

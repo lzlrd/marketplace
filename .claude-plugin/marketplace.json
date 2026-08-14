@@ -42,7 +42,7 @@
     {
       "name": "prompt-engineering",
       "source": "./prompt-engineering",
-      "description": "Turn a description into an optimized, ready-to-paste LLM prompt for a Gemini Gem, Claude Project, or custom GPT, grounded in the promptingguide.ai guide — a bundled distilled reference for offline use, plus the NotebookLM MCP for live sources when connected. Returns only the finished prompt; named-Claude-model targets defer to prompting-claude when installed. Auto-engages when you write or refine a prompt.",
+      "description": "Turn a description into an optimized, ready-to-paste LLM prompt for a Gemini Gem, Claude Project, or custom GPT, grounded in the 'Prompt Engineering in a Nutshell' knowledge base (promptingguide.ai, Google's Prompt Engineering whitepaper, Anthropic's Claude prompting docs) — a bundled distilled reference for offline use, plus the NotebookLM MCP for live sources when connected. Returns only the finished prompt; named-Claude-model targets defer to prompting-claude when installed. Auto-engages when you write or refine a prompt.",
       "category": "workflow"
     },
     {
