@@ -86,6 +86,12 @@
       "source": "./semver",
       "description": "Semantic Versioning 2.0.0 decision procedure: classifies a change as MAJOR, MINOR, or PATCH and produces the exact next version number, grounded in a bundled distilled copy of the spec. Auto-engages whenever a version is being bumped or a release is being cut.",
       "category": "workflow"
+    },
+    {
+      "name": "skill-rigor",
+      "source": "./skill-rigor",
+      "description": "Quality gate for Claude Code skill authoring: whenever a skill is created or edited, the work runs at maximum reasoning effort — via a bundled max-effort agent inheriting the session's model — and is cross-checked against the skill-creator and skill-development skills when installed. Auto-engages on any SKILL.md work.",
+      "category": "workflow"
     }
   ]
 }

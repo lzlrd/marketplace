@@ -26,3 +26,4 @@ Diab Neiroukh's Claude Code plugins in one place. Add the marketplace once, then
 | [`platform-docs`](./platform-docs) | Ground platform-API answers in live official docs - Apple docs, Microsoft Learn, and Google's developer knowledge base - when building for macOS, iOS, any Apple platform, Windows, or Android. |
 | [`library-docs`](./library-docs) | Fetch current, version-accurate docs for any library, framework, SDK, or CLI tool via Context7, with a web fallback when it isn't connected. |
 | [`semver`](./semver) | Decide the next version number under Semantic Versioning 2.0.0 - MAJOR, MINOR, or PATCH - grounded in a bundled copy of the spec. |
+| [`skill-rigor`](./skill-rigor) | Quality gate for skill authoring: skill creation and edits run at maximum reasoning effort — via a bundled max-effort agent when needed — and are cross-checked against skill-creator / skill-development when installed. |
