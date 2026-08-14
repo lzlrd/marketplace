@@ -34,5 +34,5 @@ sid="${sid//[^A-Za-z0-9_-]/}"   # harden: session_id feeds a path, so a crafted 
 # 7-day window; raise it only if a single session ever realistically outlives that.
 find "$state_dir" -type f -mtime +7 -delete 2>/dev/null || true
 
-printf '%s\n' "[mempalace] New session. Before asserting anything about the user, a person, or a project, load durable memory: with the mempalace MCP, call mcp__mempalace__mempalace_status then mempalace_search / mempalace_kg_query; without it, fall back to the mempalace CLI (mempalace status, mempalace search <query>, mempalace wake-up). Also read the recent session diary (wing_diary — the last day or two, plus the newest handoff) so you resume with context, and search wing_lessons for anything bearing on the work in front of you so you don't re-derive what a past run already learned. Query first, don't guess; if neither MCP nor CLI is present, say memory is offline this session."
+printf '%s\n' "[mempalace] Session start: load durable memory from the mempalace palace now (MCP tools if connected, else the mempalace CLI) — check status, and query before asserting anything about the user, a person, or a project. Read the newest wing_diary handoff (the last day or two), and search wing_lessons for anything bearing on the work ahead. If neither MCP nor CLI is available, say memory is offline this session."
 exit 0
