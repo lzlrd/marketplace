@@ -1,5 +1,5 @@
 ---
-description: Review a diff, branch, or PR with the 4man Reviewer — runs one security pass (the claude-security deep scan when installed, approved, and the target is committed; else /security-review; bootstrapping claude-security-guidance.md first) and spawns CLAUDE.md-compliance and correctness reviewers as teammates in parallel, returning a confidence-scored verdict. Read-only; never modifies code. Requires agent teams.
+description: Review a diff, branch, or PR with the 4man Reviewer — runs one security pass (the claude-security deep scan when the diff is large enough to earn it and the plugin is installed, approved, and the target is committed; else /security-review; bootstrapping claude-security-guidance.md first) and spawns CLAUDE.md-compliance and correctness reviewers as teammates in parallel, returning a confidence-scored verdict. Read-only; never modifies code. Requires agent teams.
 argument-hint: "[empty = pending changes on current branch | PR number | branch | 'staged' | 'working' | 'HEAD~N' | range]"
 ---
 
@@ -31,7 +31,13 @@ If you cannot resolve a target, ask the user once.
    stack. It's a committed project policy — writing it is intended. If the repo
    `.gitignore`s `.claude/`, note it and place the file where it'll be tracked (or tell
    the user).
-2. **Prefer the claude-security deep scan when it fits.** If the `claude-security` plugin is
+2. **Offer the claude-security deep scan only when the diff earns it.** The deep scan is slow and
+   burns a significant number of tokens, so size the target first — `git diff --shortstat
+   <base>...<target>`. A **small** diff goes straight to step 4 without asking: under roughly 200
+   changed lines **and** touching none of authentication or authorization, secrets or crypto, a
+   network or IPC boundary, deserialization of untrusted input, file-path or subprocess/shell
+   handling, query construction, or a new dependency. Any one of those makes it a larger diff
+   however few the lines. Otherwise, if the `claude-security` plugin is
    installed (the `claude-security:claude-security` agent type is spawnable) **and** the
    resolved target is committed work its changes scan accepts — the current branch's commits
    against a base (a branch target, a checked-out PR, `HEAD~N`) or a single commit — ask once

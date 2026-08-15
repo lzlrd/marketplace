@@ -84,12 +84,24 @@ The crew is a team, not a chain of file hand-offs. What that changes:
   conflicts — two units that contradict each other or a constraint, or anything the spec
   mandates that the review rubric would treat as a defect (an assertion-free test, a
   verbatim-duplicated block). Surface everything as **one batched question** before coding
-  starts, not one interrupt per discovery. Clean scan → proceed. If the `claude-security`
-  plugin is installed, fold one more item into this same batched question: whether to use its
-  **deep verified changes scan** as the Step-5 security pass — it may take a while and use a
-  significant number of tokens (the exact acceptance its start confirmation needs). Collect
-  the yes/no now, while the user is present; no yes collected means Step 5 uses
-  `/security-review`.
+  starts, not one interrupt per discovery. Clean scan → proceed. Settle the security-pass
+  question (next bullet) in this same batched question, while the user is present.
+- **Gate the deep security scan on the size of the run.** The `claude-security` **deep verified
+  changes scan** is slow and burns a significant number of tokens, so Step 5 reaches for it only
+  when the run earns it. Size the run from `specs.md` at pre-flight:
+  - **new-project mode** → deep scan. A codebase built from scratch is the one case that always
+    earns it. Still fold its cost acceptance into the batched question — the scan's fixed start
+    confirmation needs the user's own words — but recommend it.
+  - **larger changes** → **ask.** Add a "Security pass" item to the batched question: the deep
+    scan (panel-verified, slow, significant tokens) or `/security-review`.
+  - **small changes** → don't ask, don't scan. Step 5 runs `/security-review`; don't spend the
+    user's attention on the question.
+
+  A change is **small** only when the spec projects a single unit under roughly 200 changed
+  lines **and** touches none of: authentication or authorization, secrets or crypto, a network
+  or IPC boundary, deserialization of untrusted input, file-path or subprocess/shell handling,
+  query construction, or a new dependency. Any one of those makes it a larger change however
+  few the lines. Plugin not installed, or no cost acceptance collected → `/security-review`.
 - **Sharpen briefs with prompt-engineering when available (optional).** If the
   `prompt-engineering` plugin is installed, you may pass a teammate's spawn brief through
   `/prompt-engineering:prompt-engineering` to tighten it — worth it for a gnarly unit or a
@@ -279,8 +291,9 @@ commit, run the single security pass, then spawn the review team.
    push; a CHANGES-REQUESTED re-run just adds follow-up commits.
 4. **Single security pass.** The run's work is committed by now, so both engines apply; *you*
    (the lead) run whichever one — teammates can't invoke either.
-   - **Deep scan** — when the `claude-security` plugin is installed (the
-     `claude-security:claude-security` agent type is spawnable) and the user accepted its cost
+   - **Deep scan** — when the pre-flight size gate selected it (new-project mode, or a larger
+     change the user said yes to), the `claude-security` plugin is installed (the
+     `claude-security:claude-security` agent type is spawnable), and the user accepted its cost
      in the pre-flight batched question: spawn that agent with the job — scan this branch's
      changes, `--base <the review base: the Step 0 start commit; in PR mode <default-branch>>`
      — plus the user's cost acceptance relayed in their own words (the scan's fixed start

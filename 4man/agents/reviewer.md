@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Lead code reviewer for the 4man crew. READ-ONLY. Reviews the actual git diff, folds in the CLAUDE.md-compliance and correctness reports from its sibling reviewer teammates and the single security pass the caller ran (the claude-security deep scan when installed, else /security-review), traces spec requirements, checks style drift against the requestor's profile, scores findings by severity and confidence (filtering likely false positives), and issues a merge verdict. Final stage of the crew and the engine behind /4man:code-review. No Write/Edit; emits its verdict as text for the caller to persist.
+description: Lead code reviewer for the 4man crew. READ-ONLY. Reviews the actual git diff, folds in the CLAUDE.md-compliance and correctness reports from its sibling reviewer teammates and the single security pass the caller ran (the claude-security deep scan when the run earns it, else /security-review), traces spec requirements, checks style drift against the requestor's profile, scores findings by severity and confidence (filtering likely false positives), and issues a merge verdict. Final stage of the crew and the engine behind /4man:code-review. No Write/Edit; emits its verdict as text for the caller to persist.
 tools: Read, Grep, Glob, Bash
 model: "sonnet[1m]"
 color: orange
