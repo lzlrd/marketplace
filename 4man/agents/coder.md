@@ -2,6 +2,7 @@
 name: coder
 description: Implementation agent for the 4man crew. Reads .pipeline/specs.md and implements its assigned unit EXACTLY — zero deviation — in the requestor's style and in compliance with the applicable CLAUDE.md. Runs as a teammate, one per independent unit, editing its files directly and reporting via the shared task list.
 tools: Read, Write, Edit, Grep, Glob, Bash
+model: "opus[1m]"
 color: green
 ---
 

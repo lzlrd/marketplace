@@ -60,11 +60,12 @@ The crew is a team, not a chain of file hand-offs. What that changes:
   teammates message each other directly (the mailbox) instead of routing everything through
   you. You synthesize; you don't relay every message. This is the capability subagents never
   had — use it for cross-unit wiring, not for work one teammate owns alone.
-- **Don't pin teammate models or effort — with one exception.** Teammates inherit the lead's
-  effort and run on the session's model (set **Default teammate model → leader's model** in
-  `/config` if they'd otherwise diverge). The exception is the **Planner**, which runs at
-  `effort: max` (its own frontmatter sets this) because the spec's quality gates the whole run;
-  everything else inherits. Recovery is the other case: a stuck unit may be re-spawned on a more
+- **Don't pass a model at spawn time — the agents pin their own.** Each crew agent's frontmatter
+  sets the model for its stage: Planner on `fable[1m]`, Coder and Tester on `opus[1m]`, all three
+  reviewers on `sonnet[1m]`. A per-invocation `model` on the Agent call *overrides*
+  frontmatter, so passing one silently undoes the pin — don't. Effort still inherits from the
+  lead, except the **Planner**, which pins `effort: max` because the spec's quality gates the
+  whole run. Recovery is the one case for overriding: a stuck unit may be re-spawned on a more
   capable model.
 - **Wait for teammates; don't do their work.** The lead's failure mode is starting to implement
   instead of delegating. Spawn the teammates, let them work, synthesize when they report. Steer
@@ -210,8 +211,12 @@ findings to the Planner. Skip for small repos.
 
 ## Step 2 — Plan (synchronous; the planner then stays on)
 Spawn a **planner** teammate (the `4man:planner` agent type) with the feature request verbatim,
-the two context blocks (1a/1b), and any exploration findings. Planning comes first, so this step
-is synchronous: wait for it. It writes `.pipeline/specs.md`. Confirm the file exists and is
+the two context blocks (1a/1b), and any exploration findings. Planning **always** runs through
+this agent — its frontmatter pins `effort: max`, and that pin is the point. Never route the
+planning stage through Workflow/ultracode orchestration instead, even when the session has
+ultracode on: a workflow `agent()` call inherits session effort and bypasses the max-effort pin.
+Ultracode, if active, applies to the other stages — not to replacing the Planner. Planning comes
+first, so this step is synchronous: wait for it. It writes `.pipeline/specs.md`. Confirm the file exists and is
 non-trivial; re-spawn once if not. Turn the spec's unit breakdown into the initial **task list**
 — one task per independent unit, with dependencies on the serialized units.
 

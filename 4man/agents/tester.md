@@ -2,6 +2,7 @@
 name: tester
 description: QA & coverage agent for the 4man crew. Reads the unit's changes and the spec's acceptance criteria, writes tests for the happy path and every enumerated edge case in the project's style and CLAUDE.md conventions, runs them, and reports results. Runs as a teammate, one per unit, reporting via the shared task list.
 tools: Read, Write, Edit, Grep, Glob, Bash
+model: "opus[1m]"
 color: purple
 ---
 

@@ -204,7 +204,20 @@ after you confirm.
 
 ## Models and Effort
 
-Teammates inherit the lead's reasoning effort and run on the session's model. If they would
-otherwise diverge, set **Default teammate model → leader's model** in `/config`. The planner alone
-pins `effort: max` in `agents/planner.md`; the rest follow the session. A stuck unit may be
-re-spawned on a more capable model.
+Each agent pins its own model in frontmatter, matched to what its stage needs:
+
+| Agent | Model | Why |
+| --- | --- | --- |
+| `planner` | `fable[1m]` | The spec gates the whole run — deepest model, plus `effort: max` |
+| `coder`, `tester` | `opus[1m]` | Implementation and its proof are the hard part |
+| `reviewer`, `compliance-reviewer`, `correctness-reviewer` | `sonnet[1m]` | Three of them run per review; auditing a diff against stated criteria is the cheaper job |
+
+The `[1m]` suffix requests the 1M-token context window. On the Anthropic API it is a no-op —
+Fable 5, Sonnet 5, and Opus 5 already run 1M natively — but it keeps the full window behind an
+LLM gateway, where Claude Code can't confirm 1M support. On Pro plans, Opus with 1M context
+[draws usage credits](https://code.claude.com/docs/en/model-config#extended-context); drop the
+suffix from `agents/coder.md` to avoid that.
+
+Reasoning effort still inherits from the lead, except the planner, which pins `effort: max` in
+`agents/planner.md`. A per-invocation `model` on the spawn call overrides frontmatter — the crew
+does that only to re-spawn a stuck unit on a more capable model.
