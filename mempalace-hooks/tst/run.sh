@@ -645,6 +645,48 @@ else
   printf 'skip the terminal cases: no pseudo-terminal available here\n'
 fi
 
+section "Setup and uninstall: symlinks"
+# A dangling link planted at each backup name this run could pick must not be written through.
+P="$T/planted"; mkdir -p "$P"
+printf '# Rules\n\nRule P.\n' >"$P/CLAUDE.md"
+now="$(date +%s)"
+for d in 0 1 2 3 4 5; do ln -s "$T/victim-$d" "$P/CLAUDE.md.mempalace-hooks-bak.$((now + d))"; done
+setup "$P" local
+t "setup with links at the backup names exits 0" test "$RC" -eq 0
+victims=0; for d in 0 1 2 3 4 5; do [ -e "$T/victim-$d" ] && victims=$((victims + 1)); done
+t "no file is created through a link at a backup name" test "$victims" -eq 0
+regular=0; for b in "$P"/CLAUDE.md.mempalace-hooks-bak.*; do [ -f "$b" ] && [ ! -L "$b" ] && regular=$((regular + 1)); done
+t "the backup is a regular file at a free name" test "$regular" -eq 1
+t "the backup is readable by its owner only" test "$(ls -l "$P"/CLAUDE.md.mempalace-hooks-bak.*.1 2>/dev/null | cut -c1-10)" = "-rw-------"
+
+# A cloned repository's CLAUDE.md could point at a shell startup file.
+P="$T/link-rc"; mkdir -p "$P" "$T/rc"
+printf 'export PATH=/usr/bin\n' >"$T/rc/zshrc"; cp "$T/rc/zshrc" "$T/zshrc.orig"
+ln -s "$T/rc/zshrc" "$P/CLAUDE.md"
+setup "$P" local
+t "setup refuses a CLAUDE.md that links to a file that is not Markdown" test "$RC" -eq 1
+t "the refusal says why" grep -q 'not a Markdown file' "$T/out"
+t "the linked file is unchanged" cmp -s "$T/rc/zshrc" "$T/zshrc.orig"
+t "no backup is left beside the link" test "$(backups "$P")" -eq 0
+
+# A dotfiles setup links CLAUDE.md to a Markdown file elsewhere: that is written through.
+P="$T/link-md"; mkdir -p "$P" "$T/dotfiles"
+printf '# Dotfiles rules\n\nRule D.\n' >"$T/dotfiles/CLAUDE.md"
+ln -s "$T/dotfiles/CLAUDE.md" "$P/CLAUDE.md"
+setup "$P" local
+t "setup writes through a link to a Markdown file" test "$RC" -eq 0 -a "$(count "^$BEGIN" "$T/dotfiles/CLAUDE.md")" -eq 1
+t "the link is still a link" test -L "$P/CLAUDE.md"
+t "the user's text in the linked file is kept" grep -q '^Rule D\.$' "$T/dotfiles/CLAUDE.md"
+uninstall "$P" local
+t "uninstall removes the block through the link" test "$RC" -eq 0 -a "$(count "^$BEGIN" "$T/dotfiles/CLAUDE.md")" -eq 0
+
+# A link to nothing would create a file wherever it points.
+P="$T/link-none"; mkdir -p "$P"
+ln -s "$T/nowhere/CLAUDE.md" "$P/CLAUDE.md"
+setup "$P" local
+t "setup refuses a CLAUDE.md that links to nothing" test "$RC" -eq 1
+t "nothing is created at the link's target" test ! -e "$T/nowhere/CLAUDE.md"
+
 section "Housekeeping"
 t "the plugin directory is unchanged by the run" test "$tree_before" = "$(cd "$ROOT" && find . -not -name '*.pyc' -not -name '__pycache__' | sort)"
 

@@ -82,14 +82,37 @@ def without(lines, blocks, blanks_before=False):
 
 
 def backup(path):
-    """Copy the file beside itself. Two runs in one second must not overwrite the earlier copy."""
+    """Copy the file beside itself. Two runs in one second must not overwrite the earlier copy.
+    The copy is created exclusively and never through a symlink: a link planted at the backup
+    name, dangling or not, counts as taken, so the next name is tried."""
     stem = "%s.mempalace-hooks-bak.%d" % (path, int(time.time()))
-    dest, n = stem, 0
-    while os.path.exists(dest):
-        n += 1
-        dest = "%s.%d" % (stem, n)
-    shutil.copy(path, dest)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    n = 0
+    while True:
+        dest = stem if n == 0 else "%s.%d" % (stem, n)
+        try:
+            fd = os.open(dest, flags, 0o600)
+            break
+        except FileExistsError:
+            n += 1
+    with os.fdopen(fd, "wb") as out, open(path, "rb") as src:
+        shutil.copyfileobj(src, out)
     print("  backup: " + dest)
+
+
+def check_link(path):
+    """A CLAUDE.md that is a symlink is written through, which is what a dotfiles setup wants, but
+    only to an existing Markdown file: a cloned repository's CLAUDE.md could point at a shell
+    startup file or anywhere else the user can write."""
+    if not os.path.islink(path):
+        return
+    target = os.path.realpath(path)
+    if not os.path.isfile(target):
+        raise Refused("it is a symlink to %s, which does not exist, so writing would create a "
+                      "file outside this folder. Point the link at an existing file" % target)
+    if not target.lower().endswith(".md"):
+        raise Refused("it is a symlink to %s, which is not a Markdown file, so the block could "
+                      "damage it. Point the link at a .md file or replace it with a regular file" % target)
 
 
 def save(path, new):
@@ -112,6 +135,7 @@ def main(argv):
     action, path = argv[1], argv[2]
     old = ""
     try:
+        check_link(path)
         if os.path.exists(path):
             with open(path, encoding="utf-8", newline="") as f:   # Keep CRLF as it is.
                 old = f.read()
