@@ -16,17 +16,22 @@ You: "add a skill to my plugin that reviews changelogs"
       `skill-development` (plugin-dev), whichever are installed.
 ```
 
-Why: a skill is leveraged prompt-text — it steers every future session that loads it, so an
+Why: a skill is leveraged prompt-text. It steers every future session that loads it, so an
 authoring mistake repeats until someone notices. Spending the reasoning once, at authoring time,
 is the cheap side of that trade.
 
-## Auto-engagement
+## Auto-Engagement
 
 The entry point is an auto-invoked skill named `skill-rigor`. Claude loads it whenever skill work
-starts — "create a skill", "write a SKILL.md", "improve this skill's description", or any edit
+starts: "create a skill", "write a SKILL.md", "improve this skill's description", or any edit
 that touches a `SKILL.md` or a `skills/` directory. It applies to authoring and editing skills,
 not to merely running them. It is slash-available as `/skill-rigor:skill-rigor` if you want to
 force it.
+
+With many skills installed, Claude Code can list this one by name only, without the description it
+triggers on, and the gate then stops engaging by itself. Run `/doctor` to see what the skill
+listing costs, disable plugins you do not use with `/plugin`, raise `skillListingBudgetFraction`
+in settings, or invoke `/skill-rigor:skill-rigor` directly.
 
 ## Install
 
@@ -35,15 +40,23 @@ force it.
 /plugin install skill-rigor@lzlrd
 ```
 
-Restart the session. Check: the `skill-rigor` skill shows in the skills list and `/agents` lists
-`skill-rigor:skill-rigor`.
+If the install summary asks for it, run `/reload-plugins`. Check: the `skill-rigor` skill shows in
+the skills list and `/agents` lists `skill-rigor:skill-rigor`.
 
-## Degrades gracefully
+## Degrades Gracefully
 
 Neither guidance skill is required: with `skill-creator` (Anthropic's, from the agent-skills
 marketplace or `claude-plugins-official`) or `skill-development` (from `plugin-dev`) installed,
-the cross-check uses them; with neither, Claude says so and applies best judgment rather than
-inventing their contents. The bundled agent is a plain subagent — no agent teams, no extra setup.
+the cross-check uses them, under whatever prefix they are listed; with neither, Claude says so and
+applies best judgement rather than inventing their contents. The bundled agent is a plain subagent:
+no agent teams, no extra setup. Where it cannot be spawned (a subagent or workflow agent without
+the Agent tool), Claude does the work directly and says the max-effort pass did not run.
+
+The agent's pin has limits. `CLAUDE_CODE_EFFORT_LEVEL`, a `maxEffortLevel` setting or an
+organisation effort cap overrides `effort: max`, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` overrides
+`model: inherit`. An `effort` or `model` argument on the spawn call also overrides the pin, so the
+skill tells Claude to leave both off. While the agent runs, and for about 30 seconds after,
+`/tasks` lists it with its model and the effort level set for it.
 
 ## Structure
 
