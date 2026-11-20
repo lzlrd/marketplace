@@ -20,15 +20,15 @@ context.
 Prefer the `mempalace` **MCP** — `mcp__mempalace__mempalace_search` on `wing_user`, plus
 `mempalace_kg_query` for discrete preference facts. If the MCP isn't connected, fall back to
 the `mempalace` **CLI** (`mempalace search <query> --wing wing_user`, `mempalace wake-up`).
-Pull the room that fits the task — and `working-prefs` always:
+Pull the room that fits the task:
 
 - **`coding-style`** — before writing or editing code: naming, formatting, imports, error
   handling, comment density, test style.
 - **`writing-voice`** — before writing prose, docs, comments, commit messages, or messages, so
   you write *as* the user.
-- **`working-prefs`** — always: the user's assistant-behaviour defaults (how they want you to work).
+- **`working-prefs`** — always: the user's assistant-behavior defaults (how they want you to work).
 
-If neither the MCP nor the CLI is available, say memory is offline and proceed on best judgement.
+If neither the MCP nor the CLI is available, say memory is offline and proceed on best judgment.
 
 ## Humanize prose
 For anything that reads as prose — docs, READMEs, chat/PR messages, long comments — after you

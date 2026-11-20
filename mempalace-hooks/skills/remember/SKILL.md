@@ -15,8 +15,7 @@ explicit counterpart to the SessionStart hook's auto-load: the hook brings memor
 
 ## Where it goes
 One drawer per day in `wing_diary`, room slug = today's ISO date (e.g. `2026-07-05`).
-Convert any relative date to absolute first. Keep **one** drawer per day — update it,
-don't spawn duplicates.
+Convert any relative date to absolute first.
 
 ## What to write
 1. **Search first.** Look for today's diary drawer (and skim the last day or two for
@@ -24,7 +23,7 @@ don't spawn duplicates.
 2. **Session log** — a few tight lines: what you worked on, decisions made, anything
    that changed. Not a transcript; the durable gist.
 3. **`## Handoff`** at the top — what's next, open threads, and the non-obvious context
-   (a gotcha, a chosen approach, a dead end not worth re-trying). This is the part the
+   (a gotcha, a chosen approach, a dead end and why it failed). This is the part the
    next session reads first.
 
 ## How to store it
@@ -33,7 +32,10 @@ don't spawn duplicates.
   `wing_diary` / room `<date>`.
 - **MCP absent, `mempalace` CLI installed:** write the entry to a markdown file and
   `mempalace mine <dir> --wing wing_diary --agent <you>` to ingest it (the CLI has no direct
-  drawer-write; `mine` is the ingest path).
+  drawer-write; `mine` is the ingest path). `mine` has no room option, so by default the entry
+  lands in the wing's `general` room rather than a dated one: head the file with the ISO date so
+  a search of the wing finds it. `mine` also splits a file into drawers of about 800 characters,
+  so keep the `## Handoff` short enough to arrive in one piece.
 - **Neither available:** tell the user memory is offline — there's nowhere to persist
   the handoff this session.
 

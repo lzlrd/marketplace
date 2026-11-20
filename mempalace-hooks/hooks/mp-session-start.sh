@@ -3,8 +3,8 @@
 # Mempalace-hooks · SessionStart. Injects one active directive telling Claude to load durable memory —
 # the mempalace MCP, or the mempalace CLI as fallback — and the recent session diary at session start,
 # resume, clear, or compact.
-# A hook cannot call MCP tools; only Claude can. So this nudges and never reads or writes memory
-# itself. Its job over the always-loaded CLAUDE.md block is freshness: a short "load it now"
+# This hook is a shell command: it cannot call MCP tools; only Claude can. So this nudges and never
+# reads or writes memory itself. Its job over the always-loaded CLAUDE.md block is freshness: a short "load it now"
 # imperative placed where the block's salience is weakest (top of a new session, and right after a
 # compact or resume rewrites the transcript).
 
@@ -13,13 +13,24 @@
 
 set -uo pipefail
 
-raw="$(cat 2>/dev/null || true)"   # harness hook JSON; we only need session_id from it.
+# Harness hook JSON; we only need session_id from it. Read stdin only when it is open and not a
+# terminal: with stdin closed, the command substitution's own pipe lands on that descriptor and cat
+# would wait on itself for ever.
+raw=""
+if [ ! -t 0 ] && { true 3<&0; } 2>/dev/null; then raw="$(cat 2>/dev/null || true)"; fi
 
 # Reset THIS session's style-pull dedup markers so the voice/style directive re-fires once after a
 # resume, clear, or compact: the moments when earlier context (and the voice already pulled) may be
 # gone. Precise per-session cleanup needs the id, since clearing all markers would reset dedup for
 # other live sessions. Best-effort throughout, never fatal.
-state_dir="${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/mempalace-hooks"   # HOME fallback: set -u must not abort us
+# Markers live under XDG_STATE_HOME or HOME, never in a shared temporary directory. A relative
+# XDG_STATE_HOME is ignored, as the XDG spec requires, and so is a relative HOME, so nothing in the
+# project directory is cleaned. With neither set to an absolute path the other two hooks keep no
+# markers, so there is nothing to clean and state_dir stays empty.
+state_dir=""
+if [[ "${XDG_STATE_HOME:-}" == /* ]]; then state_dir="$XDG_STATE_HOME/mempalace-hooks"
+elif [[ "${HOME:-}" == /* ]]; then state_dir="$HOME/.local/state/mempalace-hooks"
+fi
 sid="$(printf '%s' "$raw" | python3 -c '
 import sys, json
 try:
@@ -29,10 +40,10 @@ except Exception:
 ' 2>/dev/null || true)"
 sid="${sid//[^A-Za-z0-9_-]/}"   # harden: session_id feeds a path, so a crafted value must not traverse
                                 # out of state_dir. Allow only safe chars; a real UUID is unaffected.
-[ -n "$sid" ] && rm -f "$state_dir/$sid".* 2>/dev/null || true
+[ -n "$sid" ] && [ -n "$state_dir" ] && rm -f "$state_dir/$sid".* 2>/dev/null || true
 # ponytail: prune markers from dead sessions so state doesn't accrue one empty file per session.
 # 7-day window; raise it only if a single session ever realistically outlives that.
-find "$state_dir" -type f -mtime +7 -delete 2>/dev/null || true
+[ -n "$state_dir" ] && find "$state_dir" -type f -mtime +7 -delete 2>/dev/null || true
 
 printf '%s\n' "[mempalace] Session start: load durable memory from the mempalace palace now (MCP tools if connected, else the mempalace CLI) — check status, and query before asserting anything about the user, a person, or a project. Read the newest wing_diary handoff (the last day or two), and search wing_lessons for anything bearing on the work ahead. If neither MCP nor CLI is available, say memory is offline this session."
 exit 0
