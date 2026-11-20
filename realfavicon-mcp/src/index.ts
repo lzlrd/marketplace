@@ -6,7 +6,7 @@ import { registerGenerateFavicon } from './tools/generate.js';
 import { registerCheckFavicon } from './tools/check.js';
 import { registerChangelog } from './tools/changelog.js';
 
-const server = new McpServer({ name: 'realfavicon-mcp', version: '0.2.0' });
+const server = new McpServer({ name: 'realfavicon-mcp', version: '1.1.0' });
 
 registerGenerateFavicon(server);
 registerCheckFavicon(server);

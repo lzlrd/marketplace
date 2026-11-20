@@ -1,0 +1,178 @@
+[
+  {
+    "version": "0.1",
+    "date": "2013/11/08",
+    "description": "Stub description for 0.1.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.1.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.2",
+    "date": "2013/11/20",
+    "description": "Stub description for 0.2.",
+    "importance": "Major",
+    "updateOrNot": "Stub advice for 0.2.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.3",
+    "date": "2013/11/27",
+    "description": "Stub description for 0.3.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.3.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.4",
+    "date": "2013/12/02",
+    "description": "Stub description for 0.4.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.4.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.5",
+    "date": "2014/01/14",
+    "description": "Stub description for 0.5.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.5.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.6",
+    "date": "2014/02/11",
+    "description": "Stub description for 0.6.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.6.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.7",
+    "date": "2014/04/16",
+    "description": "Stub description for 0.7.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.7.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.8",
+    "date": "2014/09/11",
+    "description": "Stub description for 0.8.",
+    "importance": "Major",
+    "updateOrNot": "Stub advice for 0.8.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.9",
+    "date": "2014/09/19",
+    "description": "Stub description for 0.9.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.9.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.10",
+    "date": "2015/01/19",
+    "description": "Stub description for 0.10.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.10.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": true
+    }
+  },
+  {
+    "version": "0.11",
+    "date": "2015/10/14",
+    "description": "Stub description for 0.11.",
+    "importance": "Major",
+    "updateOrNot": "Stub advice for 0.11.",
+    "relevance": {
+      "automatedUpdate": false,
+      "manualUpdate": true
+    }
+  },
+  {
+    "version": "0.12",
+    "date": "2015/12/03",
+    "description": "Stub description for 0.12.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.12.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": true
+    }
+  },
+  {
+    "version": "0.13",
+    "date": "2016/05/17",
+    "description": "Stub description for 0.13.",
+    "importance": "Major",
+    "updateOrNot": "Stub advice for 0.13.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.14",
+    "date": "2017/01/17",
+    "description": "Stub description for 0.14.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.14.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.15",
+    "date": "2017/04/20",
+    "description": "Stub description for 0.15.",
+    "importance": "Major",
+    "updateOrNot": "Stub advice for 0.15.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  },
+  {
+    "version": "0.16",
+    "date": "2018/01/22",
+    "description": "Stub description for 0.16.",
+    "importance": "Minor",
+    "updateOrNot": "Stub advice for 0.16.",
+    "relevance": {
+      "automatedUpdate": true,
+      "manualUpdate": false
+    }
+  }
+]

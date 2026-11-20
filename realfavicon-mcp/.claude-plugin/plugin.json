@@ -1,13 +1,13 @@
 {
   "name": "realfavicon-mcp",
-  "version": "1.0.2",
-  "description": "Generate and audit favicon sets via RealFaviconGenerator, and track its recommendation changes. Bundles the realfavicon-mcp MCP server (realfavicon_generate, realfavicon_check, realfavicon_changelog).",
+  "version": "1.1.0",
+  "description": "Generate and audit favicon sets via RealFaviconGenerator. Bundles the realfavicon-mcp MCP server (realfavicon_generate, realfavicon_check, realfavicon_changelog) and a favicons skill that drives it. Requires Bun >= 1.3 on PATH.",
   "author": {
     "name": "Diab Neiroukh",
     "url": "https://github.com/lzlrd"
   },
-  "homepage": "https://github.com/lzlrd/realfavicon-mcp",
-  "repository": "https://github.com/lzlrd/realfavicon-mcp",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/realfavicon-mcp",
+  "repository": "https://github.com/lzlrd/marketplace",
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": ["mcp", "favicon", "realfavicongenerator", "icons", "web"],
   "mcpServers": {
