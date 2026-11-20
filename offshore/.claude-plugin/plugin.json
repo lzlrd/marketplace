@@ -1,13 +1,13 @@
 {
   "name": "offshore",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Run a local abliterated model to answer prompts Claude refuses. Bundles the offshore MCP server (ask_abliterated, list_models, list_providers).",
   "author": {
     "name": "Diab Neiroukh",
     "url": "https://github.com/lzlrd"
   },
-  "homepage": "https://github.com/lzlrd/offshore",
-  "repository": "https://github.com/lzlrd/offshore",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/offshore",
+  "repository": "https://github.com/lzlrd/marketplace",
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": ["mcp", "abliterated", "uncensored", "ollama", "local-llm"],
   "mcpServers": {

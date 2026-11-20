@@ -9,7 +9,7 @@
  * Only a genuine stall (or a slow cold start before the first token) does.
  */
 
-import type { OffshoreConfig, ProviderConfig } from "./config.js";
+import { redactUrl, type OffshoreConfig, type ProviderConfig } from "./config.js";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -98,7 +98,13 @@ export class OffshoreClient {
   }
 
   private buildUrl(path: string): string {
-    const url = new URL(`${this.provider.baseUrl}${path}`);
+    let url: URL;
+    try {
+      url = new URL(`${this.provider.baseUrl}${path}`);
+    } catch {
+      // Bun's own parse error quotes the input, query string and all.
+      throw new OffshoreError(`The ${this.provider.name} provider's base_url is not a valid URL.`);
+    }
     for (const [k, v] of Object.entries(this.provider.queryParams)) url.searchParams.set(k, v);
     return url.toString();
   }
@@ -173,13 +179,13 @@ export class OffshoreClient {
       const detail = await response.text().catch(() => "");
       const retryable = response.status === 429 || response.status >= 500;
       throw new OffshoreError(
-        `${url} responded ${response.status} ${response.statusText}${detail ? `: ${detail.slice(0, 500)}` : ""}`,
+        `${redactUrl(url)} responded ${response.status} ${response.statusText}${detail ? `: ${detail.slice(0, 500)}` : ""}`,
         retryable,
       );
     }
     if (!response.body) {
       disarm();
-      throw new OffshoreError(`${url} returned no response body to stream.`);
+      throw new OffshoreError(`${redactUrl(url)} returned no response body to stream.`);
     }
 
     const reader = response.body.getReader();
@@ -224,7 +230,7 @@ export class OffshoreClient {
       const detail = await response.text().catch(() => "");
       const retryable = response.status === 429 || response.status >= 500;
       throw new OffshoreError(
-        `${url} responded ${response.status} ${response.statusText}${detail ? `: ${detail.slice(0, 500)}` : ""}`,
+        `${redactUrl(url)} responded ${response.status} ${response.statusText}${detail ? `: ${detail.slice(0, 500)}` : ""}`,
         retryable,
       );
     }
@@ -232,13 +238,13 @@ export class OffshoreClient {
     try {
       return (await response.json()) as T;
     } catch (err) {
-      throw new OffshoreError(`Could not parse JSON from ${url}.`, false, err);
+      throw new OffshoreError(`Could not parse JSON from ${redactUrl(url)}.`, false, err);
     }
   }
 
   private timeoutError(url: string, cause: unknown): OffshoreError {
     return new OffshoreError(
-      `Request to ${url} timed out after ${this.config.timeoutMs}ms with no activity. ` +
+      `Request to ${redactUrl(url)} timed out after ${this.config.timeoutMs}ms with no activity. ` +
       `Is the local model running? First load can be slow; raise OFFSHORE_TIMEOUT_MS.`,
       false,
       cause,
@@ -248,7 +254,7 @@ export class OffshoreClient {
   private unreachableError(cause: unknown): OffshoreError {
     // Network-level failure (connection refused, DNS, reset): worth retrying.
     return new OffshoreError(
-      `Could not reach the ${this.provider.name} endpoint at ${this.provider.baseUrl}. ` +
+      `Could not reach the ${this.provider.name} endpoint at ${redactUrl(this.provider.baseUrl)}. ` +
       `Check that the runtime is up and the provider's base_url is correct.`,
       true,
       cause,

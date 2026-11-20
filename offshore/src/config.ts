@@ -92,6 +92,22 @@ function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
+/**
+ * Reduce a URL to origin and path before it is logged or put in an error or tool
+ * result: base_url userinfo and query_params values can carry credentials, so both
+ * go, as does any fragment. Anything that is not a parseable http(s) URL is never
+ * echoed: without a scheme, "user:pw@host/v1" parses with "user:" as the scheme.
+ */
+export function redactUrl(raw: string): string {
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "http:" || url.protocol === "https:") return `${url.origin}${url.pathname}`;
+  } catch {
+    // Fall through to the placeholder.
+  }
+  return "(invalid URL)";
+}
+
 function readNumber(value: unknown, fallback: number): number {
   if (value === undefined || value === null || value === "") return fallback;
   const parsed = Number(value);

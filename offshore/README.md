@@ -107,6 +107,8 @@ query_params = { "api-version" = "2026-01-01" }
 
 The built-in `ollama`, `lmstudio` and `vllm` providers already exist. Redefine a block only to override its fields.
 
+Credentials can sit in `base_url` userinfo or in `query_params`, so the startup log, error messages and tool results show a provider's URL as origin and path only.
+
 ### Environment Variables
 
 Quick overrides without editing the TOML:

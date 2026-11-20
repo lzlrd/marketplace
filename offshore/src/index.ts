@@ -13,7 +13,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { loadConfig } from "./config.js";
+import { loadConfig, redactUrl } from "./config.js";
 import { OffshoreClient, OffshoreError, type ChatMessage } from "./client.js";
 
 const config = loadConfig();
@@ -21,7 +21,7 @@ const client = new OffshoreClient(config);
 
 const server = new McpServer({
   name: "offshore",
-  version: "1.0.0",
+  version: "1.0.1",
 });
 
 /** Wrap any thrown error into an MCP tool error result. */
@@ -100,7 +100,7 @@ server.registerTool(
             type: "text" as const,
             text:
               `Provider: ${config.provider.name} (${config.providerId})\n` +
-              `Endpoint: ${config.provider.baseUrl}\n` +
+              `Endpoint: ${redactUrl(config.provider.baseUrl)}\n` +
               `Active model: ${active}\n\nAvailable:\n${lines}`,
           },
         ],
@@ -124,7 +124,7 @@ server.registerTool(
     const lines = [...config.providers.values()].map((p) => {
       const marker = p.id === config.providerId ? "* " : "  ";
       const key = p.envKey ? `, env_key=${p.envKey}` : "";
-      return `${marker}${p.id}: ${p.name} [${p.wireApi}] ${p.baseUrl}${key}`;
+      return `${marker}${p.id}: ${p.name} [${p.wireApi}] ${redactUrl(p.baseUrl)}${key}`;
     });
     const source = config.configLoaded ? config.configPath : `${config.configPath} (not found, using defaults)`;
     return {
@@ -147,7 +147,7 @@ async function main() {
   // Log to stderr so we don't corrupt the stdio JSON-RPC stream on stdout.
   console.error(
     `offshore MCP server ready: provider ${config.providerId} (${config.provider.name}), ` +
-    `model ${config.model}, endpoint ${config.provider.baseUrl}`,
+    `model ${config.model}, endpoint ${redactUrl(config.provider.baseUrl)}`,
   );
 }
 
