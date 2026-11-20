@@ -67,15 +67,16 @@ strongly consistent), Firestore multi-region.
 
 Asynchronous, decoupled communication — the backbone of resilient systems.
 - **Queue (point-to-point):** one message → one consumer; decouples producer/consumer speed, smooths bursts, enables retries. Add a **dead-letter queue** for poison messages. → SQS · Service Bus · Pub/Sub (or Cloud Tasks for rate-controlled dispatch) · Cloudflare Queues.
-- **Pub/sub (fan-out):** one message → many subscribers. → SNS / EventBridge · Event Grid · Pub/Sub. (Cloudflare has no managed bus — fan out with a Worker to several Queues, or a Durable Object broadcasting to subscribers.)
-- **Stream (log):** ordered, replayable, retained for multiple independent consumers. → Kinesis / MSK · Event Hubs (Kafka-compatible) · Pub/Sub (retention + seek) / Managed Kafka · Cloudflare Pipelines (ingest → R2, query with R2 SQL).
+- **Pub/sub (fan-out):** one message → many subscribers. → SNS / EventBridge · Event Grid · Pub/Sub. (Cloudflare has no managed bus — fan out with a Worker to several Queues, a Durable Object broadcasting to subscribers, or K2 subscriptions (public beta) when consumers can pull.)
+- **Stream (log):** ordered, replayable, retained for multiple independent consumers. → Kinesis / MSK · Event Hubs (Kafka-compatible) · Pub/Sub (retention + seek) / Managed Kafka · Cloudflare K2 (public beta: independent subscriptions and replay within retention, no ordering guarantee across workers sharing a subscription; Basin Pipelines is ingestion to R2, not a consumer log).
 - **Queue vs stream:** a queue *deletes* on consume; a stream *retains* for replay. Need replay or multiple consumers reading at their own pace → stream. Just decoupling work → queue. (On GCP, Pub/Sub covers both — it's a subscription-configuration choice, not a service choice.)
 
 ## API gateway
 
 Single entry point for clients: routing, composition, auth, rate limiting, throttling, protocol
 translation. Decouples clients from backend topology. → API Gateway (GraphQL: AppSync) · API
-Management · API Gateway / Apigee — or plain L7 LB when you need none of the API features.
+Management · API Gateway / Apigee · Cloudflare: Workers + API Shield — or plain L7 LB when you need
+none of the API features.
 
 ## CDN / edge
 
@@ -153,7 +154,7 @@ tolerate unknown fields.
 - **Enrichment / transformation:** a step that augments a thin event with looked-up data before downstream consumers see it.
 - **Archive & replay:** retain events to rebuild state or reprocess after a bug fix. → EventBridge archive+replay · Event Hubs retention (Event Grid dead-letters to storage; replay is yours) · Pub/Sub snapshots + seek.
 → Buses/fan-out: EventBridge, SNS · Event Grid · Pub/Sub, Eventarc. Orchestration when flows need
-supervising: Step Functions · Durable Functions / Logic Apps · Workflows.
+supervising: Step Functions · Durable Functions / Logic Apps · Workflows · Cloudflare Workflows.
 
 ## Distributed transactions: the saga pattern
 
@@ -170,8 +171,8 @@ release inventory). The steps are coordinated either by services reacting to eac
 | Best for | Simple, few-step flows | Complex flows with many branches/compensations |
 
 → Choreography via the event bus (EventBridge/SNS · Event Grid · Pub/Sub); orchestration via Step
-Functions · Durable Functions (orchestrator functions are exactly this) / Logic Apps · Workflows —
-all with built-in retry/catch for compensation branches. Reach for orchestration once the
+Functions · Durable Functions (orchestrator functions are exactly this) / Logic Apps · Workflows ·
+Cloudflare Workflows — all with built-in retry/catch for compensation branches. Reach for orchestration once the
 compensation logic gets non-trivial.
 
 ## Event sourcing & CQRS

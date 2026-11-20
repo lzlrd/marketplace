@@ -4,7 +4,8 @@ Condensed end-to-end designs that follow this skill's six-step loop, so there's 
 pattern-match against. They're deliberately terse — the *shape* of the reasoning is the lesson, not
 exhaustive detail. Architectures are in role terms; each ends with the service mapping per cloud
 (**AWS · Azure · GCP**), with a **Cloudflare** line on the designs that are edge-native (the rest fit
-an edge-first platform poorly, and forcing a mapping would be exactly the trap step 4 warns against).
+an edge-first platform poorly, and forcing a mapping would be exactly the cross-cloud trap SKILL.md
+warns against).
 For a real request, expand the relevant one with the user's actual numbers, map to *their* cloud, and
 run the full Well-Architected gate.
 
@@ -22,9 +23,9 @@ run the full Well-Architected gate.
 ## 1. URL shortener
 
 - **Requirements:** shorten a long URL → short code; redirect code → original. Read-heavy, low latency on redirect, highly available, codes never collide. Optional: custom aliases, expiry, click analytics.
-- **Estimate:** (see `references/estimation.md` worked example) 100M writes/day → ~1K write QPS / ~100K read QPS; ~270 TB over 5 yrs ×3 replication; hot cache ~500 MB.
+- **Estimate:** (see `references/estimation.md` worked example) 100M writes/day → ~1K write QPS / ~100K read QPS; ~270 TB over 5 yrs ×3 replication; hot cache ~0.9 TB (a sharded cache cluster).
 - **Architecture:** client → CDN/edge → API gateway → stateless handler. Write path: generate code (base-62 of a counter, or hash+collision-check), store mapping in a KV store. Read path: cache lookup → KV lookup → 301/302 redirect, served from cache/edge wherever possible. Async click-event stream → object store for analytics.
-- **Mapping:** AWS — DynamoDB · ElastiCache · CloudFront · API GW + Lambda · Kinesis → S3. Azure — Cosmos DB · Managed Redis · Front Door · APIM + Functions · Event Hubs → Blob/OneLake. GCP — Firestore · Memorystore · Cloud CDN + global LB · Cloud Run · Pub/Sub → BigQuery (analytics lands queryable for free). Cloudflare — Workers KV or D1 for the mapping · Cache API at the edge · a Worker on the redirect path · click events → Pipelines → R2 (query with R2 SQL). The textbook edge fit: the redirect is served from the nearest POP, often without touching an origin.
+- **Mapping:** AWS — DynamoDB · ElastiCache · CloudFront · API GW + Lambda · Kinesis → S3. Azure — Cosmos DB · Managed Redis · Front Door · APIM + Functions · Event Hubs → Blob/OneLake. GCP — Firestore · Memorystore · Cloud CDN + global LB · Cloud Run · Pub/Sub → BigQuery (analytics lands queryable for free). Cloudflare — a Durable Object counter (or D1) allocates the code · the mapping is written once to Workers KV and served from KV and the Cache API at the edge (D1 holds 10 GB per database, so it stores the mapping only at small scale or sharded) · a Worker on the redirect path · click events → Basin Pipelines → R2 (query with Basin SQL). The textbook edge fit: the redirect is served from the nearest POP, often without touching an origin.
 - **WA review:** Reliability — multi-zone KV store, no SPOF. Performance — cache + edge for read latency. Cost — serverless scales to zero. Security — validate input URLs, rate-limit creation (edge WAF).
 - **Tradeoffs / bottleneck:** counter-based codes need a distributed counter (or pre-allocated ranges per node) to avoid a write bottleneck; hashing avoids that but must handle collisions. Read path is cache-bound — cache hit ratio is the metric that matters.
 
@@ -68,7 +69,7 @@ run the full Well-Architected gate.
 
 - **Requirements:** one event → notify many users across channels (push, email, SMS); reliable delivery; retries; user preferences; scale to spikes.
 - **Architecture:** event → pub/sub topic → fan-out to per-channel queues → channel workers → providers (APNs/FCM, email, SMS). Queues absorb spikes and isolate slow/failing channels; DLQ for undeliverable; prefs + idempotency keys in a KV store.
-- **Mapping:** AWS — SNS → SQS → Lambda; SES email; DynamoDB prefs. Azure — Event Grid → Service Bus queues → Functions; Communication Services (email/SMS/push); Cosmos DB prefs. GCP — Pub/Sub topic → per-channel subscriptions → Cloud Run; Firebase Cloud Messaging for push, partner email/SMS (SendGrid/Twilio); Firestore prefs. Cloudflare — a Worker fans out to per-channel Queues → consumer Workers; Email Service for email, partner APIs for SMS/push; prefs in KV or D1 (no managed pub/sub bus, so the fan-out is explicit).
+- **Mapping:** AWS — SNS → SQS → Lambda; SES email; DynamoDB prefs. Azure — Event Grid → Service Bus queues → Functions; Communication Services (email/SMS/push); Cosmos DB prefs. GCP — Pub/Sub topic → per-channel subscriptions → Cloud Run; Firebase Cloud Messaging for push, partner email/SMS (SendGrid/Twilio); Firestore prefs. Cloudflare — a Worker fans out to per-channel Queues → consumer Workers; Email Service for email, partner APIs for SMS/push; prefs in KV or D1 (no managed push bus, so the fan-out is explicit).
 - **WA review:** Reliability — queues + DLQ + retries; one bad channel doesn't block others. Operational — monitor per-channel queue depth and delivery rate. Cost — serverless scales with volume.
 - **Tradeoffs / bottleneck:** at-least-once delivery means duplicates → dedup with idempotency keys. Provider rate limits are the real bottleneck → the queue is what makes that survivable.
 

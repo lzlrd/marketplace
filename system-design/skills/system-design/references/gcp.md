@@ -1,15 +1,17 @@
 # Google Cloud Service Selection Cheat-Sheet
 
 Best-fit service per need, with the criterion that decides between close alternatives. The skill
-body has the compressed three-cloud table; this is the Google Cloud version with the "pick X when"
+body has the compressed four-cloud table; this is the Google Cloud version with the "pick X when"
 reasoning. The golden rule: **prefer managed/serverless**, and **tie every choice to the access
 pattern or requirement**, never the brand name.
 
 **Distinctive strengths** (for cross-cloud decisions): global-by-default primitives (a VPC spans
 regions; one anycast IP load-balances the planet); BigQuery's serverless warehouse; Spanner's
 horizontally scalable *strongly consistent* relational; Kubernetes provenance (GKE); the
-data/ML/Gemini stack. Naming watch: Cloud Functions → **Cloud Run functions**; the Vertex AI agent
-stack is being rebranded **Gemini Enterprise Agent Platform** (2026) — docs still say Vertex AI.
+data/ML/Gemini stack. Naming watch: Cloud Functions → **Cloud Run functions** · Vertex AI →
+**Gemini Enterprise Agent Platform** (short form **Agent Platform**; 2026) · Agent Engine → **Agent
+Runtime** · Vertex AI Search → **Agent Search**. Code-level identifiers can still carry the old
+names.
 
 ## Live docs via MCP
 
@@ -49,7 +51,7 @@ readers are global); one VM's disk → **Persistent Disk**; shared POSIX → **F
 |---|---|
 | **Cloud SQL** (Postgres/MySQL/SQL Server) | Default managed relational for modest-to-large needs. |
 | **AlloyDB** | Postgres-compatible with cloud-native performance (Google claims ~4× transactional throughput, columnar engine for analytics on live data). The Aurora analog — pick when Cloud SQL tops out. |
-| **Spanner** | Horizontally scalable relational with **global strong consistency** and up to 99.999% multi-region SLA. Unique among the three clouds — pick when you need relational semantics *and* planet-scale writes; costs more, minimum footprint. |
+| **Spanner** | Horizontally scalable relational with **global strong consistency** and up to 99.999% multi-region SLA. Unique among the hyperscalers — pick when you need relational semantics *and* planet-scale writes; costs more, minimum footprint. |
 | **Firestore** | Serverless document DB: single-digit-ms, real-time listeners, offline sync, multi-region replication built in; MongoDB-compatible API available. Default KV/doc pick for app data. |
 | **Bigtable** | Wide-column NoSQL for huge, high-throughput, low-latency key/row workloads (time series, personalization, telemetry) — the HBase/Cassandra analog. Firestore for app docs; Bigtable for firehose-scale rows. |
 | **Memorystore** (Valkey/Redis/Memcached) | In-memory cache: sessions, leaderboards, hot reads, rate-limit counters. Valkey is the strategic engine. |
@@ -127,14 +129,14 @@ surface → **Cloud Armor** on the global LB.
 
 | Service | Use when |
 |---|---|
-| **Vertex AI** | Managed foundation models (Gemini + Model Garden incl. Claude, Llama) via API, plus train/tune/host your own models — model platform and ML lifecycle in one. Default for LLM/GenAI capability. |
-| **Agent Engine + ADK** | Deploy and operate AI *agents*: ADK is the code-first framework; Agent Engine the managed runtime with Sessions and Memory Bank; A2A for agent-to-agent; MCP tool governance. Being rebranded Gemini Enterprise Agent Platform. → see `references/agentic-ai.md`. |
-| **Vertex AI Search** | Managed retrieval for RAG (semantic/hybrid over your corpus); alternatives: AlloyDB/Cloud SQL pgvector, BigQuery vector search, Vertex AI Vector Search for pure ANN at scale. |
+| **Gemini Enterprise Agent Platform** (formerly Vertex AI) | Managed foundation models (Gemini + Model Garden incl. Claude, Llama) via API, plus train/tune/host your own models — model platform and ML lifecycle in one. Default for LLM/GenAI capability. |
+| **Agent Runtime + ADK** | Deploy and operate AI *agents*: ADK is the code-first framework; Agent Runtime (formerly Agent Engine) the managed runtime with Sessions and Memory Bank; A2A for agent-to-agent; Agent Registry and Agent Gateway for agent and MCP tool governance. Part of Gemini Enterprise Agent Platform. → see `references/agentic-ai.md`. |
+| **Agent Search** (formerly Vertex AI Search) | Managed retrieval for RAG (semantic/hybrid over your corpus); alternatives: AlloyDB/Cloud SQL pgvector, BigQuery vector search, Vector Search on Agent Platform for pure ANN at scale. |
 | **BigQuery ML** | Train/serve models with SQL inside the warehouse — cheap first step for tabular ML. |
 
-Decision: need an LLM capability → **Vertex AI (Gemini)**; need an autonomous, tool-using, stateful
-agent in production → **Agent Engine + ADK**; need RAG retrieval → **Vertex AI Search** or pgvector
-in the DB you already run; bespoke model lifecycle → **Vertex AI** custom training.
+Decision: need an LLM capability → **Agent Platform (Gemini)**; need an autonomous, tool-using,
+stateful agent in production → **Agent Runtime + ADK**; need RAG retrieval → **Agent Search** or
+pgvector in the DB you already run; bespoke model lifecycle → **Agent Platform** managed training.
 
 ## Workflow orchestration
 
@@ -161,14 +163,14 @@ in the DB you already run; bespoke model lifecycle → **Vertex AI** custom trai
 | API gateway | API Gateway · Apigee |
 | CDN / edge | Cloud CDN · Media CDN |
 | DNS | Cloud DNS |
-| Search | Vertex AI Search · BigQuery search indexes · partner Elastic |
+| Search | Agent Search · BigQuery search indexes · partner Elastic |
 | Data warehouse / analytics | BigQuery (+ Dataflow for stream/batch processing) |
 | Workflow orchestration | Workflows · Cloud Composer |
 | Monitoring / logging | Cloud Monitoring · Logging · Trace |
 | Auth | IAM service accounts · Identity Platform |
 | Secrets / keys | Secret Manager · Cloud KMS |
-| Vector store (RAG) | Vertex AI Search · pgvector (AlloyDB/Cloud SQL) · BigQuery |
-| ML / recommendations | Vertex AI · BigQuery ML |
-| Generative AI / LLM | Vertex AI (Gemini) |
-| AI agents at scale | Agent Engine + ADK (Gemini Enterprise Agent Platform) |
+| Vector store (RAG) | Agent Search · pgvector (AlloyDB/Cloud SQL) · BigQuery |
+| ML / recommendations | Agent Platform · BigQuery ML |
+| Generative AI / LLM | Gemini Enterprise Agent Platform (Gemini) |
+| AI agents at scale | Agent Runtime + ADK (Gemini Enterprise Agent Platform) |
 | Media transcoding | Transcoder API · Live Stream API |

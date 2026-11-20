@@ -11,8 +11,8 @@ agent-specific components and decisions on top of that loop.
 
 ## When it's an "agent" (and when it isn't)
 
-- **Single model call** (classify, summarize, extract, translate) → the managed model API (Bedrock · Foundry Models · Vertex AI · Workers AI, or AI Gateway in front of any provider). Stateless, simple, done. Don't over-build.
-- **RAG** (answer grounded in your data) → model + a **retrieval store** (S3 Vectors/OpenSearch · AI Search · Vertex AI Search/pgvector · Cloudflare Vectorize or Cloudflare AI Search). Still mostly a request/response system.
+- **Single model call** (classify, summarize, extract, translate) → the managed model API (Bedrock · Foundry Models · Gemini Enterprise Agent Platform · Workers AI, or AI Gateway in front of any provider). Stateless, simple, done. Don't over-build.
+- **RAG** (answer grounded in your data) → model + a **retrieval store** (S3 Vectors/OpenSearch · AI Search · Agent Search/pgvector · Cloudflare Vectorize or Cloudflare AI Search). Still mostly a request/response system.
 - **Agent** (plans, chooses and calls tools, remembers across turns, may run for a while or call other agents) → the platforms below. This is where you get cold starts, state, identity, tool governance, and observability as real concerns.
 
 ## The agent concerns — and each cloud's answer
@@ -22,28 +22,28 @@ read the target platform's docs for current APIs (all are fast-moving — verify
 Cloudflare decomposes differently — primitives, not a packaged service — and gets its own section
 after the table.
 
-| Concern | AWS Bedrock AgentCore | Azure: Foundry Agent Service | GCP: Agent Engine (Vertex AI / Gemini Enterprise Agent Platform) |
+| Concern | AWS Bedrock AgentCore | Azure: Foundry Agent Service | GCP: Gemini Enterprise Agent Platform (formerly Vertex AI) |
 |---|---|---|---|
-| Run/scale the agent | **Runtime** — serverless, session-isolated execution | **Hosted agents** — managed deploy/autoscale, CI/CD promotion | **Agent Engine runtime** — managed sessions, scaling |
-| Expose tools | **Gateway** — REST/Lambda/MCP → governed agent tools | **1,400+ MCP-enabled tools** + connectors, private tool networking | **MCP tool governance** via API Registry; managed MCP servers for GCP services |
+| Run/scale the agent | **Runtime** — serverless, session-isolated execution | **Hosted agents** — managed deploy/autoscale, CI/CD promotion | **Agent Runtime** (formerly Agent Engine) — managed sessions, scaling |
+| Expose tools | **Gateway** — REST/Lambda/MCP → governed agent tools | **1,400+ MCP-enabled tools** + connectors, private tool networking | **Agent Gateway** (governed agent-to-tool connectivity) + **Agent Registry** (catalog of MCP servers and tools); managed MCP servers for GCP services |
 | Memory / state | **Memory** — session + long-term, episodic learning | **Managed memory** — persistent context across sessions | **Sessions + Memory Bank** — cross-session preferences/recall |
-| Identity & credentials | **Identity** — OAuth in/out, credential providers | Entra ID + managed identities end-to-end | IAM service accounts / Workload Identity |
-| Ground in your data | RAG via Bedrock Knowledge Bases / S3 Vectors | **Foundry IQ** (SharePoint, Fabric, Bing) / AI Search | Vertex AI Search / pgvector |
+| Identity & credentials | **Identity** — OAuth in/out, credential providers | Entra ID + managed identities end-to-end | **Agent Identity** — the agent authenticates as itself or on behalf of the user; IAM service accounts |
+| Ground in your data | RAG via Bedrock Knowledge Bases / S3 Vectors | **Foundry IQ** (SharePoint, Fabric, Bing) / AI Search | Agent Search / pgvector |
 | Safe code execution | **Code Interpreter** (sandboxed) | sandboxed tool containers | ADK code-exec tools (sandboxed) |
 | Web browsing | **Browser** (managed headless) | browser tools via connectors | browser tools via ADK/marketplace |
-| Observe agent runs | **Observability** — OTel traces, CloudWatch | **Foundry Control Plane** — tracing, Azure Monitor, evaluators | Cloud Trace/Logging integrations |
-| Quality & guardrails | **Evaluations** (13 built-in evaluators) + **Policy** (natural-language action bounds, preview) | built-in evaluators (groundedness, safety…), AI Red Teaming, content filters | evaluation services + Model Armor / safety filters |
-| Catalog & governance | **Agent Registry** (preview) | Foundry Control Plane / agent catalog | tool/agent governance in the Agent Builder console |
+| Observe agent runs | **Observability** — OTel traces, CloudWatch | **Foundry Control Plane** — tracing, Azure Monitor, evaluators | **Agent Observability** — OTel traces and metrics for agents and MCP servers, Cloud Trace |
+| Quality & guardrails | **Evaluations** (built-in evaluators) + **Policy** (natural-language action bounds) | built-in evaluators (groundedness, safety…), AI Red Teaming, content filters | evaluation services + Model Armor / safety filters |
+| Catalog & governance | **AWS Agent Registry** (standalone service, discoverable from AgentCore) | Foundry Control Plane / agent catalog | **Agent Registry** — catalog and governance of agents, tools, and MCP servers |
 | Authoring framework | any (Strands, LangGraph…) — protocol-level HTTP/MCP/A2A | **Microsoft Agent Framework** (Semantic Kernel + AutoGen successor); OpenAI Responses-API compatible | **ADK** (code-first), Agent Studio (low-code) |
 
 **Cross-platform notes.** **MCP** is the tool-integration standard on all three — design tools as
 MCP servers and they stay portable. **A2A** (agent-to-agent, Linux Foundation) is the emerging
 cross-vendor agent protocol — Google pushes it hardest; AgentCore speaks it too. Authoring
 frameworks (LangGraph, Agent Framework, ADK, Strands) run anywhere containers run — the platform
-lock-in lives in memory, identity, and governance services, not the agent code. Naming is in
-flux (2026): Azure's stack is now **Microsoft Foundry**; Google's is being rebranded **Gemini
-Enterprise Agent Platform** — verify current names/regions/APIs against vendor docs before
-committing a design.
+lock-in lives in memory, identity, and governance services, not the agent code. Naming moved in
+2026: Azure's stack is now **Microsoft Foundry**; Google's is **Gemini Enterprise Agent Platform**
+(formerly Vertex AI; Agent Engine is now Agent Runtime) — verify current names/regions/APIs against
+vendor docs before committing a design.
 
 ## Cloudflare: agents built on primitives, not a managed agent service
 
@@ -54,9 +54,9 @@ turnkey governance, but near-zero cold starts and per-session state for free. Ma
 onto the primitives:
 
 - **Run/scale + memory/state** — each agent instance is a **Durable Object**: single-threaded, strongly consistent, with colocated SQLite for per-session memory and WebSocket hibernation for long-lived connections. Session isolation and state are the default, not an add-on.
-- **Expose tools** — the SDK's **`MCPAgent`** hosts MCP servers directly on Workers; tools are plain Workers/bindings or any HTTP/MCP endpoint. No managed tool gateway — you wire and authorize tools yourself (service bindings keep it credential-free).
+- **Expose tools** — the SDK's **`createMcpHandler`** (from `agents/mcp/server`) serves a stateless MCP server from a Worker; keep anything that must outlive a request in KV, D1, or a Durable Object (`McpAgent`, the older Durable-Object-backed class, is deprecated). Tools are plain Workers/bindings or any HTTP/MCP endpoint. No managed tool gateway — you wire and authorize tools yourself (service bindings keep it credential-free).
 - **Model access** — **Workers AI** for edge inference, or **AI Gateway** in front of any provider (OpenAI, Anthropic, Workers AI) for caching, rate limiting, fallback, cost analytics, and Guardrails.
-- **Ground in your data** — **Vectorize** (vectors) or **AI Search** (managed RAG over an R2 bucket).
+- **Ground in your data** — **Vectorize** (vectors) or **AI Search** (managed retrieval and RAG; vector, keyword, or hybrid search).
 - **Identity & credentials** — scoped API tokens and **service bindings**; front the agent's own endpoint with **Cloudflare Access** (ZTNA) when it's internal.
 - **Schedule & durability** — the SDK's `this.schedule` plus **Workflows** give long-running, retryable, human-in-the-loop execution; **Queues** for async tool work.
 - **Observe & govern** — **Workers Observability** + **AI Gateway** analytics/logs. There is **no managed agent registry or built-in evaluator suite** — bring your own evaluation and cataloging.
@@ -70,7 +70,7 @@ and models that already live there.
 ## Design decisions specific to agents
 
 - **Runtime lifecycle — per-request vs per-session.** Per-request is stateless and simplest; per-session keeps a warm context across a conversation (lower latency, holds state) at the cost of session affinity. Choose by whether turns depend on each other.
-- **Tool integration protocol.** **MCP** for standardized tool servers, plain HTTP for simple APIs, **A2A** for agent-to-agent. Front existing APIs with the platform's gateway (AgentCore Gateway · Foundry tool connections · API Registry) instead of teaching every agent bespoke auth.
+- **Tool integration protocol.** **MCP** for standardized tool servers, plain HTTP for simple APIs, **A2A** for agent-to-agent. Front existing APIs with the platform's gateway (AgentCore Gateway · Foundry tool connections · Agent Gateway with Agent Registry) instead of teaching every agent bespoke auth.
 - **Memory boundary.** Decide what's short-term (within a session) vs long-term (persisted across sessions), and the retention/privacy policy for it — conversation history is user data (security pillar; GDPR/residency if the security pillar has privacy folded in, as Google's does).
 - **Identity & least privilege.** The agent acts on behalf of a user or itself; scope its credentials tightly, rotate them, and never bake secrets into the agent. Outbound calls use credential providers / managed identities / service accounts — not hard-coded keys.
 - **Cost & latency.** Token cost and model latency dominate — the infra is rounding error. Design levers: pick the smallest model that meets quality, cache/reuse retrieved context, stream responses, and bound tool-call loops so a runaway agent can't rack up cost (a max-steps cap, analogous to the circuit breaker in `references/patterns.md`).
@@ -88,5 +88,6 @@ The pillars still apply, with agent-specific emphasis:
 
 AgentCore material adapted from the MIT-licensed `aws-agentic-ai` skill in zxkane/aws-skills (see
 SKILL.md "Sources & attribution"); Azure/GCP/Cloudflare platform mappings verified against vendor
-docs and announcements, July 2026. All four platforms ship features monthly — treat the table as the
-map, not the territory.
+docs and announcements, July 2026; Google's Agent Platform names and launch status, the AgentCore
+Policy and Agent Registry status, and Cloudflare's MCP hosting API were re-checked in November 2026.
+All four platforms ship features monthly — treat the table as the map, not the territory.

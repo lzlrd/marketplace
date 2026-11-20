@@ -84,7 +84,7 @@ The canonical Jeff Dean / Norvig figures. Memorize the *ratios*, not the digits.
 
 | Availability | Downtime/year | Downtime/month |
 |---|---|---|
-| 99% (two 9s) | 3.65 days | 7.2 hours |
+| 99% (two 9s) | 3.65 days | 7.3 hours |
 | 99.9% (three 9s) | 8.76 hours | 43.8 minutes |
 | 99.99% (four 9s) | 52.6 minutes | 4.4 minutes |
 | 99.999% (five 9s) | 5.26 minutes | 26 seconds |
@@ -107,7 +107,7 @@ design.
 - **Write QPS** = 100M / 10⁵ = **1,000 writes/s** avg; peak ≈ **2–3K/s**.
 - **Read QPS** = 100× = **100K reads/s** avg; peak ≈ **200–300K/s**. → read-dominated; this is a caching + read-replica problem, and the cache tier is the real design.
 - **Storage** = 100M × 500 B × 365 × 5 ≈ **91 TB** before replication; ×3 ≈ **~270 TB**. → too big for one node → object/NoSQL store + sharding, not a single relational box.
-- **Hot cache** = short-link traffic is steeper than 80/20 — assume ~80% of reads hit the hottest ~1% of URLs; caching that hot set ≈ 1M × 500 B ≈ **500 MB** → trivially fits one in-memory cache node; cache is cheap and buys most of the read throughput.
+- **Hot cache** = short-link traffic is steeper than 80/20 — assume ~80% of reads hit the hottest ~1% of URLs; caching that hot set ≈ 1% × 182.5B URLs ≈ 1.8B × 500 B ≈ **0.9 TB** → too big for one in-memory node, so the cache is sharded too; still ~100× smaller than the 91 TB it fronts, and it buys most of the read throughput.
 - **Read bandwidth** = 300K/s × 500 B ≈ **150 MB/s ≈ 1.2 Gbps** at peak → fine for any cloud's CDN/LB tier; serve redirects from cache/edge.
 
 The math alone tells you: read-heavy, cache-first, sharded durable store, edge-cacheable redirects.

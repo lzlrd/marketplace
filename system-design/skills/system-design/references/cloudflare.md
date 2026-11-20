@@ -16,25 +16,27 @@ storage (R2); **Durable Objects**, a strongly-consistent stateful-compute-plus-s
 with no real equivalent on the big three; near-zero cold starts (V8 isolates rather than
 containers/VMs); and consumption pricing that scales to zero. Be equally honest about the gaps: no
 VMs or managed Kubernetes, no managed relational OLTP at hyperscaler scale (D1 favors many small
-databases over one giant one), no managed pub/sub event bus, and no consumer CIAM.
+databases over one giant one), no managed push or content-routed event bus, and no consumer CIAM.
 
 **Model & naming watch:** Cloudflare has **no VMs, no managed Kubernetes, and no regional
 VPC/subnets** — the mental model is "code and data at every edge," not "a region you provision."
 Workers KV is **eventually consistent**; reach for Durable Objects or D1 when a read must see the
 latest write. Recent renames: **AutoRAG → AI Search** · **Magic WAN → Cloudflare WAN** (Magic Transit
-keeps its name). **Pages** is converging into Workers — build new full-stack projects on Workers with
-Static Assets.
+keeps its name) · **Browser Rendering → Browser Run** · **Cloudflare Pipelines / R2 Data Catalog /
+R2 SQL → Basin Pipelines / Basin Catalog / Basin SQL** (the Basin data platform) · **WARP client →
+Cloudflare One Client** (Zero Trust; consumer WARP keeps its name). **Pages** is converging into
+Workers — build new full-stack projects on Workers with Static Assets.
 
 ## Live docs via MCP
 
 If a Cloudflare MCP is connected, use it to confirm fast-moving facts before finalizing a choice —
 Cloudflare ships new edge primitives and renames existing ones often (see the naming watch above).
-The `search_cloudflare_documentation` tool is exposed by the `cloudflare-docs`, `cloudflare-bindings`,
-and `cloudflare-observability` servers; the `cloudflare-api` server exposes its own `search` + `docs`
-tools instead (and `cloudflare-builds` has no docs tool). Not connected or it errors: fall back to
-this cheat-sheet silently. The bindings/builds/observability servers otherwise operate
-already-provisioned resources, which is out of scope for a design skill — reach for a docs-search
-tool, not those.
+Use the documentation-search tool only: `docs` on the Cloudflare API MCP server
+(`mcp.cloudflare.com/mcp`, the server the official Cloudflare plugin connects), or
+`search_cloudflare_documentation` on the standalone Documentation server. On the API server,
+`search` queries the OpenAPI spec and `execute` calls the API against the user's account; neither
+belongs in a design skill, nor do the product-specific servers that operate already-provisioned
+resources. Not connected or it errors: fall back to this cheat-sheet silently.
 
 ## Compute
 
@@ -56,7 +58,7 @@ fastest placement.
 
 | Service | Use when |
 |---|---|
-| **R2** | Object storage — blobs, media, backups, data lakes, static assets — with an S3-compatible API and **no egress fees** (the headline cost story vs S3). Adds R2 Data Catalog (managed Apache Iceberg) queryable by R2 SQL. The default "where do big files live" answer on Cloudflare. |
+| **R2** | Object storage — blobs, media, backups, data lakes, static assets — with an S3-compatible API and **no egress fees** (the headline cost story vs S3). Adds Basin Catalog (managed Apache Iceberg, formerly R2 Data Catalog) queryable by Basin SQL. The default "where do big files live" answer on Cloudflare. |
 | **Workers KV** | Read-optimized, globally replicated key-value for data that is read far more than written and tolerates seconds of propagation: config, routing metadata, feature flags, A/B assignments. **Eventually consistent** — not for counters or read-your-writes. |
 | **Cache API / Tiered Cache / Cache Reserve** | The CDN cache, programmable from a Worker: cache computed responses at the edge, add an upper tier to raise hit ratio, or persist to Cache Reserve. |
 
@@ -72,26 +74,29 @@ responses → **Cache API**.
 | **Durable Objects (SQLite)** | Strongly-consistent, transactional storage colocated with single-threaded compute, scoped to one object. Reach for it when consistency and coordination matter more than raw relational surface — the stateful primitive, not a general query database. |
 | **Hyperdrive** | You have an **existing** Postgres/MySQL (on a hyperscaler or on-prem) and want it fast from Workers: connection pooling + query caching that hides origin latency and connection limits. A bridge to a hyperscaler OLTP database, not a database itself. |
 | **Vectorize** | Vector database for embeddings — semantic search, classification, and the retrieval half of RAG. |
-| **R2 SQL** | Serverless, distributed query engine over Iceberg tables in R2 Data Catalog — read-only analytics over petabytes without moving the data. The Athena/BigQuery analog (Cloudflare prices it per TB scanned). |
+| **Basin SQL** (formerly R2 SQL) | Serverless, distributed query engine over Iceberg tables in Basin Catalog — read-only analytics over petabytes without moving the data. The Athena/BigQuery analog (Cloudflare prices it per TB scanned). |
 | **Analytics Engine** | High-cardinality time-series written from Workers and queried with SQL — usage metrics, service telemetry. |
 
 Decision: relational at edge scale → **D1** (lean to many small DBs); a large or existing OLTP
 database → keep it on a hyperscaler and accelerate it with **Hyperdrive**; a key that needs one
 strongly-consistent owner → **Durable Objects**; vectors/RAG retrieval → **Vectorize**; analytics
-over data in R2 → **R2 SQL**; app-emitted metrics → **Analytics Engine**.
+over data in R2 → **Basin SQL**; app-emitted metrics → **Analytics Engine**.
 
 ## Messaging & streaming
 
 | Service | Use when |
 |---|---|
 | **Queues** | At-least-once message queue: batching, retries, delays, dead-letter queues, pull or Worker (push) consumers. Background jobs, decoupling producers from consumers, absorbing spikes. Point-to-point. |
-| **Pipelines** | Streaming ingestion at volume: **Streams** buffer events (HTTP or Worker binding) → **Pipelines** apply SQL transforms → **Sinks** land Iceberg/Parquet in R2. Clickstream, telemetry, and logs that you then query with R2 SQL. |
+| **K2** (public beta) | Durable, replayable log: producers append records, and each **subscription** independently receives every record (start at `earliest` to replay what is still retained); workers sharing a subscription split the work. At-least-once, no deduplication, and no ordering guarantee across workers that share a subscription. Retention is time-bounded and beta limits apply — check both before committing. The closest Kinesis/Kafka analog. |
+| **Basin Pipelines** (formerly Cloudflare Pipelines) | Streaming ingestion at volume: **Streams** buffer events (HTTP or Worker binding) → **Pipelines** apply SQL transforms → **Sinks** land Iceberg/Parquet in R2. Clickstream, telemetry, and logs that you then query with Basin SQL. Ingestion only — not a log that consumers read, and joins/aggregation happen later in Basin SQL. |
 
-Decision: decouple or defer work → **Queues** (add a DLQ for poison messages); high-volume event or
-telemetry ingestion you'll analyze later → **Pipelines** → R2 (query with R2 SQL); real-time fan-out
-to connected clients → **Durable Objects** + WebSockets. There is **no managed pub/sub event bus**
-(no SNS/EventBridge analog) — build fan-out with a Worker writing to several Queues, or a Durable
-Object broadcasting to subscribers.
+Decision: decouple or defer work → **Queues** (add a DLQ for poison messages); a replayable log that
+several independent consumers read → **K2** (weigh its beta status for production); high-volume
+event or telemetry ingestion you'll analyze later → **Basin Pipelines** → R2 (query with Basin SQL);
+real-time fan-out to connected clients → **Durable Objects** + WebSockets. There is **no managed
+push or content-routed event bus** (no SNS/EventBridge analog) — build fan-out with a Worker writing
+to several Queues, a Durable Object broadcasting to subscribers, or K2 subscriptions when consumers
+can pull.
 
 ## API, edge & CDN
 
@@ -137,7 +142,7 @@ regions, subnets, or VPCs to lay out (see `references/networking-os.md`).
 | Service | Use when |
 |---|---|
 | **Access** (Cloudflare One / Zero Trust) | Identity-first (ZTNA) access to **internal** apps and infrastructure: SSO/IdP federation, device posture, per-app policy. For your team and private apps — **not** consumer sign-up (there is no Cognito/Identity-Platform CIAM analog). |
-| **Gateway** | Secure Web Gateway: DNS, HTTP, and network filtering for **outbound** traffic, with WARP as the device client. |
+| **Gateway** | Secure Web Gateway: DNS, HTTP, and network filtering for **outbound** traffic, with the Cloudflare One Client (formerly WARP) as the device client. |
 | **WAF + DDoS Protection** | Managed and custom L7 rules, OWASP core ruleset, rate limiting; automatic, unmetered L3–L7 DDoS mitigation. The public-web attack-surface default. |
 | **Turnstile** | A CAPTCHA alternative — verify a visitor is human without puzzles. |
 | **Bot Management / API Shield / Page Shield** | Bot scoring / API security (schema, mTLS, discovery) / client-side (Magecart, supply-chain) protection. |
@@ -156,14 +161,14 @@ scoped **API tokens**, rather than an IAM-role-per-resource model.
 | **Workers AI** | Serverless GPU inference over a managed model catalog (Llama, embeddings, image, speech…) plus partner models — pay-per-use, running at the edge. The default for adding model capability. |
 | **AI Gateway** | A proxy in front of **any** model provider (Workers AI, OpenAI, Anthropic…): caching, rate limiting, retries/fallback, logging, cost analytics, and **Guardrails** content moderation. Front every model call with it. |
 | **Vectorize** | Vector database for embeddings — the retrieval store for semantic search and RAG. |
-| **AI Search** (formerly AutoRAG) | Fully-managed RAG: point it at an R2 bucket and it handles embeddings, indexing, retrieval, and generation behind one API. |
-| **Agents SDK** (`agents`) | Build stateful, tool-using AI **agents** on Workers + Durable Objects: per-session state, WebSockets, scheduling, tool calls, and `MCPAgent` for hosting MCP servers. → see `references/agentic-ai.md`. |
-| **Browser Rendering** | Headless Chromium (Puppeteer/Playwright) from a Worker — scraping, screenshots, PDF generation, agent browsing. |
+| **AI Search** (formerly AutoRAG) | Fully-managed search and RAG: connect a data source such as an R2 bucket (or upload files) and it handles chunking, embeddings, indexing, retrieval, and optionally generation behind one API. Three search modes — vector, BM25 keyword, and hybrid (the default for new instances). Chunk-level retrieval for content search and grounding, not a log-analytics engine in the OpenSearch mold. |
+| **Agents SDK** (`agents`) | Build stateful, tool-using AI **agents** on Workers + Durable Objects: per-session state, WebSockets, scheduling, and tool calls. To host an MCP server, `createMcpHandler` (from `agents/mcp/server`) serves a stateless one from a plain Worker, no Durable Object needed; `McpAgent`, the older Durable-Object-backed class, is deprecated. → see `references/agentic-ai.md`. |
+| **Browser Run** (formerly Browser Rendering) | Headless Chromium (Puppeteer/Playwright) from a Worker — scraping, screenshots, PDF generation, agent browsing. |
 
 Decision: run inference → **Workers AI**; govern, cache, and observe calls to any model →
-**AI Gateway**; store vectors → **Vectorize**; turnkey RAG over your documents → **AI Search**; a
-stateful, tool-using agent in production → **Agents SDK** (Durable Objects give each session its
-memory); a headless browser as a tool → **Browser Rendering**.
+**AI Gateway**; store vectors → **Vectorize**; turnkey search or RAG over your documents →
+**AI Search**; a stateful, tool-using agent in production → **Agents SDK** (Durable Objects give
+each session its memory); a headless browser as a tool → **Browser Run**.
 
 ## Workflow orchestration
 
@@ -189,14 +194,15 @@ When you've sketched the architecture in role terms, this is the translation tab
 | Cache | Cache API / Tiered Cache · Workers KV |
 | Object / blob storage | R2 (zero egress) |
 | Message queue | Queues |
-| Pub/sub | — (no managed bus; fan-out via Workers/Queues or Durable Objects) |
-| Event stream / ingestion | Pipelines (→ R2) |
-| Stream processing | Pipelines (SQL at ingest) |
+| Pub/sub | — (no managed push bus; fan-out via Workers/Queues, Durable Objects, or K2 subscriptions) |
+| Event stream | K2 (public beta) |
+| Streaming ingestion | Basin Pipelines (→ R2) |
+| Stream processing | — (Basin Pipelines: SQL filter/transform at ingest only) |
 | API gateway | Workers · API Shield |
 | CDN / edge | Cloudflare CDN + Workers |
 | DNS | Cloudflare DNS |
-| Search | Vectorize (vector) · — (no managed full-text) |
-| Data warehouse / analytics | R2 SQL (Iceberg on R2) · Analytics Engine (time-series) |
+| Search | AI Search (BM25 keyword + vector hybrid) · Vectorize (vector) |
+| Data warehouse / analytics | Basin SQL (Iceberg on R2) · Analytics Engine (time-series) |
 | Workflow orchestration | Workflows · Cron Triggers |
 | Monitoring / logging | Workers Observability · Logpush · GraphQL Analytics |
 | Auth | Access (ZTNA, internal apps) · service bindings (workload) |

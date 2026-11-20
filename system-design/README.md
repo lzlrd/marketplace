@@ -28,8 +28,9 @@ request looks like architecture or service-selection work: "design…", "archite
 as `/system-design:system-design` if you want to force it.
 
 It stays out of operating or debugging deployed resources, infrastructure-as-code authoring,
-and pipeline/build failures. Those are not design work. If the request lacks the constraints
-needed to design well (scale, consistency, latency), it asks before guessing.
+and pipeline/build failures. Those are not design work. If a constraint that changes the design
+(scale, consistency, latency) is missing and cannot reasonably be defaulted, it asks; otherwise it
+states the assumption it made so you can correct it.
 
 ## Install
 
@@ -56,7 +57,7 @@ all six.
    **role terms** ("write-through cache", "fan-out queue"), not products. Role-first naming
    keeps the design portable across clouds.
 4. **Map to cloud services.** Only now name products, best-fit per requirement, each with a
-   one-line "why this, not the alternative". One per-cloud cheat-sheet loads on demand.
+   one-line "why this, not the alternative". The target cloud's cheat-sheet loads on demand.
 5. **Well-Architected review.** Walk the vendor's pillars; name the bottleneck, the dominant
    failure mode, and the one or two tradeoffs consciously made.
 6. **Document.** A written design in a consistent structure.
@@ -65,17 +66,18 @@ all six.
 
 The architecture is cloud-agnostic; the service mapping is not. The skill keeps those steps
 separate so a design stays honest and portable. It ships the three hyperscalers' Well-Architected
-frameworks (AWS: 6 pillars, Azure: 5, Google Cloud: 6 — Cloudflare ships a Reference Architecture
+frameworks (AWS: 6 pillars, Azure: 5, Google Cloud: 6; Cloudflare ships a Reference Architecture
 library instead), per-cloud service-selection cheat-sheets, and a rule against the commonest
 cross-cloud trap: porting service *names* instead of re-deriving the *choice* (Cosmos DB's RU model
 and five consistency levels, Pub/Sub covering queue + fan-out + stream in one service, a global
 anycast load balancer vs a regional one, Cloudflare's edge-first model with no VMs or managed event
 bus: differences that change the design).
 
-Where a documentation MCP for the target cloud is connected — Google's dev-knowledge server, the
-official Azure and AWS MCP servers, Cloudflare's docs server — the skill checks it for fast-moving
+Where a documentation MCP for the target cloud is connected (AWS Knowledge, Microsoft Learn, Google
+Developer Knowledge, or Cloudflare's documentation search), the skill checks it for fast-moving
 facts (new services, renames, current limits) alongside the bundled cheat-sheets, and falls back to
-them quietly when no MCP is connected.
+them quietly when none is connected. It uses documentation and knowledge tools only, never tools
+that read or change your cloud account.
 
 ## Structure
 

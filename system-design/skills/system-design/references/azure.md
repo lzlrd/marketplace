@@ -1,7 +1,7 @@
 # Azure Service Selection Cheat-Sheet
 
 Best-fit service per need, with the criterion that decides between close alternatives. The skill
-body has the compressed three-cloud table; this is the Azure version with the "pick X when"
+body has the compressed four-cloud table; this is the Azure version with the "pick X when"
 reasoning. The golden rule: **prefer managed/serverless**, and **tie every choice to the access
 pattern or requirement**, never the brand name.
 
@@ -18,13 +18,16 @@ Fabric**, not Synapse.
 
 ## Live docs via MCP
 
-Two docs paths. Prefer the **`microsoft-learn`** MCP (`microsoft_docs_search` / `microsoft_docs_fetch`
-— no `az login` needed) to confirm current Azure service facts before finalizing a choice; Azure's
+Prefer the **`microsoft-learn`** MCP (`microsoft_docs_search` / `microsoft_docs_fetch` — no
+`az login` needed) to confirm current Azure service facts before finalizing a choice; Azure's
 naming churns faster than most (see the renames above). The **`azure`** MCP (Azure MCP Server — 40+
-service namespaces incl. a Well-Architected/Advisor one, run via `bunx -y @azure/mcp@latest`) adds
-resource-aware tools, but most of them need `az login` or service-principal credentials first; if a
-call fails on auth, don't block the design on it — fall back to `microsoft-learn`, this cheat-sheet,
-or a `learn.microsoft.com` fetch silently.
+service namespaces, started with `npx -y @azure/mcp@latest server start`) also carries tools that
+suit a design and do not operate subscription resources: documentation, best practices,
+Well-Architected, and Cloud Architect (`cloudarchitect`). Its service namespaces (storage, cosmos,
+monitor, deploy, and the like) read or change subscription resources and need `az login` or
+service-principal credentials; leave those alone in a design. Not connected, or a call fails on
+auth: don't block the design on it — fall back to `microsoft-learn`, this cheat-sheet, or a
+`learn.microsoft.com` fetch silently.
 
 ## Compute
 

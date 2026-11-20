@@ -1,7 +1,7 @@
 # AWS Service Selection Cheat-Sheet
 
 Best-fit service per need, with the criterion that decides between close alternatives. The skill
-body has the compressed three-cloud table; this is the AWS version with the "pick X when" reasoning.
+body has the compressed four-cloud table; this is the AWS version with the "pick X when" reasoning.
 The golden rule: **prefer managed/serverless** (it removes undifferentiated heavy lifting — a
 Well-Architected default), and **tie every choice to the access pattern or requirement**, never the
 brand name.
@@ -141,12 +141,13 @@ Decision: workload-to-AWS auth → **IAM**; your application's human users → *
 | **Bedrock AgentCore** | Deploy and operate AI *agents* at scale: Runtime, Gateway (APIs → agent tools/MCP), Memory, Identity, Policy, Evaluations, Code Interpreter, Browser, Observability. → see `references/agentic-ai.md`. |
 | **SageMaker** | Train, tune, and host your *own* models; full ML lifecycle. Reach for it when Bedrock's managed models don't fit. |
 | **S3 Vectors** | Native vector storage/query in S3 — cheap RAG/semantic-search at scale; pick OpenSearch instead when queries need consistently low latency. |
-| **Kendra / OpenSearch (vectors)** | Retrieval for RAG — semantic search over your corpus to ground an LLM. |
+| **Bedrock Knowledge Bases / OpenSearch (vectors)** | Retrieval for RAG — semantic search over your corpus to ground an LLM. (Kendra is closed to new customers — AWS points to Bedrock Knowledge Bases.) |
 | **Personalize** | Managed recommendation models without building ML infra. |
 
 Decision: need an LLM capability → **Bedrock**; need an autonomous, tool-using, stateful agent in
 production → **AgentCore**; need a bespoke model → **SageMaker**; need RAG retrieval → a vector
-store (**S3 Vectors** for cost at scale, **OpenSearch** for latency) in front of Bedrock.
+store (**S3 Vectors** for cost at scale, **OpenSearch** for latency) in front of Bedrock, or
+**Bedrock Knowledge Bases** to have ingestion and retrieval managed.
 
 ## Workflow orchestration
 
