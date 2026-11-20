@@ -1,0 +1,10 @@
+{
+  "name": "prompting",
+  "version": "1.0.0",
+  "description": "Write, optimise, or migrate a prompt for a specific model from Anthropic, Google, or OpenAI, tuned to that model's documented behaviour: Claude (Fable 5.2, Mythos 5.2, Opus 5.5, Sonnet 5.5, Haiku 5.5, Opus 4.8), Gemini (3 and 4 Carbon), and GPT (6 and 6.2). Works offline from a mirror of each vendor's prompting guides, refreshed by a bundled sync script. Returns the finished prompt, plus the request settings to change when the documented fix is not prompt text. Replaces the prompting-claude and prompt-engineering plugins. Auto-engages via the 'prompting' skill; slash-available as /prompting.",
+  "author": { "name": "Diab Neiroukh", "url": "https://github.com/lzlrd" },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/lzlrd/marketplace/tree/master/prompting",
+  "repository": "https://github.com/lzlrd/marketplace",
+  "keywords": ["prompting", "prompt-engineering", "system-prompt", "claude", "gemini", "gpt", "context-engineering", "reasoning-effort", "meta-prompt"]
+}
