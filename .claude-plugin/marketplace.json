@@ -12,7 +12,7 @@
     {
       "name": "mempalace-hooks",
       "source": "./mempalace-hooks",
-      "description": "Wires the mempalace memory server into Claude Code: three hooks that load palace context, pull the user's writing/coding voice, and nudge the session diary, plus a /match-style skill and a /remember handoff for cross-session continuity. MCP-first, with a mempalace-CLI fallback when the MCP isn't connected, and no auto-mining.",
+      "description": "Wires the mempalace memory server into Claude Code: three hooks that load palace context, pull the user's writing/coding voice, and nudge the session diary, plus a match-style skill and a /mempalace-hooks:remember handoff for cross-session continuity. MCP-first, with a mempalace-CLI fallback when the MCP isn't connected, and no auto-mining.",
       "category": "workflow"
     },
     {
@@ -24,13 +24,13 @@
     {
       "name": "4man",
       "source": "./4man",
-      "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features — or stands up a whole new codebase — in the requestor's own style, run as a Claude Code agent team whose teammates coordinate through the shared task list and mailbox. Auto-engages for feature and new-project work; also exposes /4man:code-review. Requires the experimental agent-teams feature (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).",
+      "description": "A four-role dev crew (Planner, parallel Coders and Testers, and a fan-out Reviewer) that builds and reviews features — or stands up a whole new codebase — in the requestor's own style, run as a Claude Code agent team whose teammates coordinate through the shared task list and mailbox. Auto-engages for feature and new-project work; also exposes /4man:code-review. Requires the experimental agent-teams feature (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS); works best with the Task tools (CLAUDE_CODE_ENABLE_TODO_TOOLS).",
       "category": "workflow"
     },
     {
       "name": "realfavicon-mcp",
       "source": "./realfavicon-mcp",
-      "description": "Bundles the realfavicon-mcp MCP server: generate favicon assets and HTML from a master image, audit a live page's favicon setup, and query the RealFaviconGenerator change-log.",
+      "description": "Generate and audit favicon sets via RealFaviconGenerator. Bundles the realfavicon-mcp MCP server (generate, check, change-log) and a favicons skill that drives it. Requires Bun >= 1.3 on PATH.",
       "category": "productivity"
     },
     {
@@ -40,33 +40,21 @@
       "category": "productivity"
     },
     {
-      "name": "prompt-engineering",
-      "source": "./prompt-engineering",
-      "description": "Turn a description into an optimized, ready-to-paste LLM prompt for a Gemini Gem, Claude Project, or custom GPT, grounded in the 'Prompt Engineering in a Nutshell' knowledge base (promptingguide.ai, Google's Prompt Engineering whitepaper, Anthropic's Claude prompting docs) — a bundled distilled reference for offline use, plus the NotebookLM MCP for live sources when connected. Returns only the finished prompt; named-Claude-model targets defer to prompting-claude when installed. Auto-engages when you write or refine a prompt.",
-      "category": "workflow"
-    },
-    {
-      "name": "prompting-claude",
-      "source": "./prompting-claude",
-      "description": "Optimize or migrate a prompt for a specific Claude model, tuned to that model's documented behavior — Claude Fable 5 and Mythos 5, Opus 5, Sonnet 5, and Opus 4.8. Grounded in Anthropic's official prompting docs and the Claude 5 context-engineering rules: trust the model's judgment over enumerated rules, tune effort, thinking, verbosity, subagents, and verification, and strip constructs that break or degrade on current models (manual chain-of-thought that trips the reasoning_extraction refusal on Fable 5, over-verification on Opus 5, prefilled turns, budget_tokens, and temperature/top_p/top_k on Sonnet 5). Bundled distilled reference for offline use — returns only the finished prompt. Auto-engages via the 'prompting-claude' skill whenever you write or tune a prompt for a named Claude 5 generation model or Opus 4.8; slash-available as /prompting-claude:prompting-claude.",
-      "category": "workflow"
-    },
-    {
-      "name": "fableplan",
-      "source": "./fableplan/plugins/fableplan",
-      "description": "Plan with Fable 5, execute with Opus: an opusplan-style dual-model setup for Claude Code. Tracked as a submodule of the lzlrd/fableplan fork.",
+      "name": "prompting",
+      "source": "./prompting",
+      "description": "Write, optimize, or migrate a prompt for a specific Claude, Gemini, or GPT model, tuned to that model's documented behavior: Claude Fable 5.2, Mythos 5.2, Opus 5.5, Sonnet 5.5, Haiku 5.5, and Opus 4.8; Gemini 3 and 4 Carbon; GPT-6 and 6.2. Works offline from a mirror of each vendor's prompting guides. Returns the finished prompt, plus the request settings to change when the fix is not prompt text. Auto-engages when you write or tune a prompt; slash-available as /prompting.",
       "category": "workflow"
     },
     {
       "name": "reload-claude-md",
       "source": "./reload-claude-md",
-      "description": "A /reload-claude-md command that re-reads the in-effect CLAUDE.md memory files from disk and re-anchors the session to their current content, so mid-session edits take effect without a restart. Claude Code loads CLAUDE.md only at session start and has no native reload; this fills that gap. Read-only and user-invoked.",
+      "description": "A /reload-claude-md command that re-reads the in-effect CLAUDE.md memory files from disk and re-anchors the session to their current content, so mid-session edits take effect without a restart. Claude Code loads CLAUDE.md at session start and has no reload command; this fills that gap. Does not cover .claude/rules files, or an AGENTS.md that no CLAUDE.md imports or links to. Read-only and user-invoked.",
       "category": "productivity"
     },
     {
       "name": "export-skills",
       "source": "./export-skills",
-      "description": "Deduce which locally-installed Claude Code skills can run in Claude Desktop / claude.ai and package the qualifiers into upload-ready zips. Inventories plugin and personal skills correctly (latest version, symlinks resolved, no marketplace dupes), classifies each against Desktop's sandbox and MCP list, and curates clean zips with SKILL.md at every folder root. Lenient by default; pass --strict for a zero-code-execution reading. Auto-engages when you want to move skills to Claude Desktop, or run it as /export-skills.",
+      "description": "Deduce which locally-installed Claude Code skills can run in Claude Desktop / claude.ai and package the qualifiers into upload-ready zips. Inventories plugin and personal skills (the installed version of each plugin, symlinks resolved, no marketplace dupes), classifies each against Desktop's sandbox and MCP list, and curates one zip per skill with SKILL.md at the skill folder's root. A skill that breaks a claude.ai upload rule gets no zip and is reported with the reason. Lenient by default; pass --strict to leave out skills that run code in the sandbox. Auto-engages when you want to move skills to Claude Desktop, or run it as /export-skills.",
       "category": "productivity"
     },
     {
@@ -78,7 +66,7 @@
     {
       "name": "library-docs",
       "source": "./library-docs",
-      "description": "Fetches current, version-accurate documentation for any third-party library, framework, SDK, API, or CLI tool via Context7, with a web fallback when it isn't connected. Auto-engages when a question depends on a specific library's current API, configuration, or version behavior.",
+      "description": "Fetches current, version-accurate documentation for any third-party library, framework, SDK, API, or CLI tool via Context7, with a web fallback when it isn't connected or can't answer. Auto-engages when a question depends on a specific library's current API, configuration, or version behavior.",
       "category": "workflow"
     },
     {
@@ -90,7 +78,7 @@
     {
       "name": "skill-rigor",
       "source": "./skill-rigor",
-      "description": "Quality gate for Claude Code skill authoring: whenever a skill is created or edited, the work runs at maximum reasoning effort — via a bundled max-effort agent inheriting the session's model — and is cross-checked against the skill-creator and skill-development skills when installed. Auto-engages on any SKILL.md work.",
+      "description": "Quality gate for Claude Code skill authoring: whenever a skill is created or edited, the work runs at maximum reasoning effort — via a bundled max-effort agent inheriting the session's model when the session runs lower — and is cross-checked against the skill-creator and skill-development skills when installed. Auto-engages on any SKILL.md work.",
       "category": "workflow"
     }
   ]
