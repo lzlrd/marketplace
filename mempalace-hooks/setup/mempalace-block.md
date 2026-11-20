@@ -1,5 +1,5 @@
 <!-- MEMPALACE-HOOKS:BEGIN — durable memory via the mempalace MCP (with a mempalace-CLI fallback). Three hooks automate session-load, pre-response style-pull, and post-edit diary nudges. This is a managed block: reinstall/update with /mempalace-hooks:setup rather than editing it by hand. -->
-## Long-running memory (mempalace)
+## Long-running Memory (MemPalace)
 
 Durable, cross-session memory lives in the **mempalace** palace. Prefer the `mempalace` **MCP** tools (`mcp__mempalace__*`); if the MCP isn't connected, fall back to the `mempalace` **CLI** — `mempalace search` / `mempalace wake-up` / `mempalace status` for recall, and `mempalace mine <dir> --wing <wing>` to write (the CLI has no direct drawer-write and no room option: mined text lands in the wing's `general` room, so in CLI mode search by wing). If neither is available, memory is offline this session — say so rather than guessing. **Use two stores:**
 
