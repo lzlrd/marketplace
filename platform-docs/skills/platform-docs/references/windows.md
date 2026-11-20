@@ -20,7 +20,13 @@
 → `microsoft_code_sample_search` when the task is to generate or review code, not just explain a
 concept.
 
-## Fallback (MCP not connected)
+## Availability
+
+Win32 reference pages end with a Requirements table (minimum supported client and server, header,
+library); `microsoft_docs_fetch` returns it with the page. WinRT reference pages list the device
+family with the build that introduced the API, and its API contract.
+
+## Fallback
 
 WebFetch the page directly under `https://learn.microsoft.com/...`, or WebSearch
 `site:learn.microsoft.com <topic>`.
