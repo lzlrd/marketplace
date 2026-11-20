@@ -1,20 +1,35 @@
 #! /usr/bin/env python3
 """Inventory locally-installed Claude Code skills for the export-skills skill.
 
-Emits a JSON work-list on stdout: the Desktop MCP server list plus one record per
-skill (latest cached version only, personal symlinks resolved, no marketplace
-duplicates). This encodes Phase 0 of references/process.md so the traps are
-handled the same way every run.
+Emits a JSON work-list on stdout: what Claude Desktop has for MCP servers, plus
+one record per skill (the installed version of each plugin, only the skills that
+plugin loads, personal symlinks resolved, no marketplace duplicates). This
+encodes Phase 0 of references/process.md so the traps are handled the same way
+every run.
 """
 import json
 import os
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # Keep __pycache__ out of the installed plugin.
+from skill_rules import frontmatter_name, read_frontmatter, upload_issues
+
 HOME = Path.home()
-CACHE = HOME / ".claude" / "plugins" / "cache"
-PERSONAL_ROOTS = [HOME / ".claude" / "skills", HOME / ".agents" / "skills"]
-SETTINGS = HOME / ".claude" / "settings.json"
+# Claude Code keeps its user settings, plugins and personal skills in ~/.claude,
+# which CLAUDE_CONFIG_DIR relocates.
+CONFIG = Path(os.environ.get("CLAUDE_CONFIG_DIR") or HOME / ".claude").expanduser()
+# It keeps cache/, installed_plugins.json and marketplaces/ under one plugins
+# root, which CLAUDE_CODE_PLUGIN_CACHE_DIR relocates on its own.
+PLUGINS = Path(os.environ.get("CLAUDE_CODE_PLUGIN_CACHE_DIR")
+               or CONFIG / "plugins").expanduser()
+CACHE = PLUGINS / "cache"
+PERSONAL_ROOTS = [CONFIG / "skills", HOME / ".agents" / "skills"]
+# The settings files that can carry enabledPlugins, lowest precedence first: user,
+# then the project and local files of the directory the script runs in.
+SETTINGS = [CONFIG / "settings.json",
+            Path(".claude") / "settings.json",
+            Path(".claude") / "settings.local.json"]
 
 
 def _desktop_config_path():
@@ -41,78 +56,176 @@ RESOURCE_DIRS = {"references", "reference", "scripts", "templates", "assets",
 
 def load_json(path):
     try:
-        return json.loads(Path(path).read_text())
+        return json.loads(Path(path).read_text(encoding="utf-8-sig"))
     except Exception:
         return None
 
 
-def version_key(version_dir):
-    """Sort key for picking the latest cached version. Numeric-dotted versions
-    (1.2.3) sort naturally and outrank anything else; hashes and 'unknown' fall
-    back to modification time."""
-    parts = version_dir.name.split(".")
-    if parts and all(p.isdigit() for p in parts):
-        return (1, [int(p) for p in parts], 0.0)
-    try:
-        mtime = version_dir.stat().st_mtime
-    except OSError:
-        mtime = 0.0
-    return (0, [], mtime)
+def load_dict(path):
+    data = load_json(path)
+    return data if isinstance(data, dict) else {}
 
 
-def skill_name(rest, plugin):
-    """Derive the skill name from the path components after the version dir.
-    Only the two documented shapes count as an installable skill; deeper matches
-    are bundled example SKILL.md files, not skills to export."""
-    if rest == ["SKILL.md"]:
-        return plugin  # Root-level SKILL.md (e.g. humanizer).
-    if len(rest) == 3 and rest[0] == "skills" and rest[2] == "SKILL.md":
-        return rest[1]
-    return None
+def applies_here(install):
+    """An install at project or local scope belongs to the project at its
+    projectPath and loads there, or in a folder inside it. Any other install, or
+    one without a projectPath, counts here."""
+    project = install.get("projectPath")
+    if install.get("scope") not in ("project", "local") or not isinstance(project, str):
+        return True
+    here, project = Path.cwd().resolve(), Path(project).expanduser().resolve()
+    return project == here or project in here.parents
 
 
-def resource_dirs_of(skill_dir):
-    out = []
-    try:
-        for child in sorted(skill_dir.iterdir()):
-            if child.is_dir() and child.name in RESOURCE_DIRS:
-                out.append(child.name)
-    except OSError:
-        pass
+def installed_versions():
+    """({(repo, plugin): [(version, version_dir)]}, missing, elsewhere) from
+    installed_plugins.json, the record of what Claude Code loads. One plugin has
+    an entry per install scope; each distinct directory counts once. `missing`
+    names the installs whose directory is gone, and `elsewhere` the installs of
+    a plugin installed only for other projects. The versions are None only when
+    the file is absent or unreadable: a file that records nothing is a record."""
+    plugins = load_dict(PLUGINS / "installed_plugins.json").get("plugins")
+    if not isinstance(plugins, dict):
+        return None, [], []
+    out, missing, elsewhere = {}, [], []
+    for plugin_id, installs in plugins.items():
+        plugin, _, repo = str(plugin_id).partition("@")
+        if isinstance(installs, dict):
+            installs = [installs]  # Version 1 of the file kept one record per plugin.
+        installs = [i for i in installs if isinstance(i, dict)] if isinstance(installs, list) else []
+        here = [install for install in installs if applies_here(install)]
+        if not here:
+            elsewhere += [{"repo": repo or None, "plugin": plugin, "scope": install.get("scope"),
+                           "project": install.get("projectPath")} for install in installs]
+        for install in here:
+            path = install.get("installPath")
+            if not isinstance(path, str) or not Path(path).is_dir():
+                missing.append({"repo": repo or None, "plugin": plugin, "path": path})
+                continue
+            found = out.setdefault((repo or None, plugin), [])
+            if Path(path) not in [vd for _, vd in found]:
+                found.append((str(install.get("version") or Path(path).name), Path(path)))
+    return out, missing, elsewhere
+
+
+def cached_versions():
+    """Fallback without install records: per cached plugin, the most recently
+    modified version directory that Claude Code has not marked as replaced. An
+    update or uninstall leaves `.orphaned_at` in the old directory, and writing
+    that marker makes the old directory the newest one, so it has to be skipped."""
+    out = {}
+    for plugin_dir in sorted(CACHE.glob("*/*")):
+        try:
+            live = [(d.stat().st_mtime, d.name, d) for d in plugin_dir.iterdir()
+                    if d.is_dir() and not (d / ".orphaned_at").exists()]
+        except OSError:
+            continue
+        if live:
+            newest = max(live)[2]
+            out[(plugin_dir.parent.name, plugin_dir.name)] = [(newest.name, newest)]
     return out
 
 
-def inventory_plugins():
-    # Keep only the latest version per (repo, plugin, name).
-    best = {}
-    if not CACHE.is_dir():
-        return []
-    for skill_md in CACHE.rglob("SKILL.md"):
-        rel = skill_md.relative_to(CACHE).parts
-        if len(rel) < 4:
-            continue  # Need repo/plugin/version/.../SKILL.md.
-        repo, plugin, version = rel[0], rel[1], rel[2]
-        name = skill_name(list(rel[3:]), plugin)
-        if name is None:
-            continue
-        version_dir = CACHE / repo / plugin / version
-        key = (repo, plugin, name)
-        vk = version_key(version_dir)
-        if key not in best or vk > best[key]["_vk"]:
-            best[key] = {
-                "_vk": vk,
-                "kind": "plugin",
-                "repo": repo,
-                "plugin": plugin,
-                "plugin_version": version,
-                "name": name,
-                "skill_md": str(skill_md),
-                "skill_dir": str(skill_md.parent),
-                "resource_dirs": resource_dirs_of(skill_md.parent),
-            }
-    for rec in best.values():
-        rec.pop("_vk", None)
-    return list(best.values())
+def marketplace_entry(version_dir, repo, plugin):
+    """The plugin's entry in its marketplace.json. A plugin whose source is the
+    marketplace root carries the file inside its cached version, which matches the
+    installed version exactly, so that copy is tried before the marketplace clone."""
+    candidates = [version_dir]
+    if repo:
+        location = load_dict(PLUGINS / "known_marketplaces.json").get(repo)
+        candidates.append(PLUGINS / "marketplaces" / repo)
+        if isinstance(location, dict) and isinstance(location.get("installLocation"), str):
+            candidates.append(Path(location["installLocation"]))
+    for base in candidates:
+        entries = load_dict(base / ".claude-plugin" / "marketplace.json").get("plugins")
+        for entry in entries if isinstance(entries, list) else []:
+            if isinstance(entry, dict) and entry.get("name") == plugin:
+                return entry
+    return {}
+
+
+def as_paths(value):
+    if isinstance(value, str):
+        return [value]
+    return [v for v in value if isinstance(v, str)] if isinstance(value, list) else []
+
+
+def skill_dirs_of(version_dir, repo, plugin):
+    """The skill directories this plugin version loads, by the rules in Claude
+    Code's plugins reference: the default skills/ scan, plus every path under a
+    `skills` key in plugin.json or the marketplace entry. A marketplace entry
+    whose source is the marketplace root and that lists skills loads only those.
+    A SKILL.md at the plugin root is a skill when "." is listed, or when there is
+    neither a skills/ directory nor a `skills` key."""
+    entry = marketplace_entry(version_dir, repo, plugin)
+    listed = as_paths(entry.get("skills"))
+    only_listed = bool(listed) and entry.get("source") in (".", "./")
+    listed += as_paths(load_dict(version_dir / ".claude-plugin" / "plugin.json").get("skills"))
+    if not listed and not (version_dir / "skills").is_dir():
+        # Only the root SKILL.md, never a folder below it, the way "." would be.
+        return [version_dir] if (version_dir / "SKILL.md").is_file() else []
+    root, found = version_dir.resolve(), {}
+    for rel in ([] if only_listed else ["skills"]) + listed:
+        base = version_dir / rel
+        if root not in (base.resolve(), *base.resolve().parents):
+            continue  # Claude Code rejects a path that leaves the plugin.
+        # A path is one skill folder, or a directory of them.
+        if (base / "SKILL.md").is_file():
+            dirs = [base]
+        else:
+            dirs = [d for d in sorted(base.glob("*")) if (d / "SKILL.md").is_file()]
+        for skill_dir in dirs:
+            found.setdefault(skill_dir.resolve(), skill_dir)
+    return [version_dir if real == root else skill_dir for real, skill_dir in found.items()]
+
+
+def root_listing(skill_dir):
+    """What sits at the skill root beside SKILL.md: the KEEP dirs the packager
+    ships whole, the other directories, and the loose files."""
+    resource, other, files = [], [], []
+    try:
+        for child in sorted(skill_dir.iterdir()):
+            if child.is_dir():
+                (resource if child.name in RESOURCE_DIRS else other).append(child.name)
+            elif child.name != "SKILL.md":
+                files.append(child.name)
+    except OSError:
+        pass
+    return resource, other, files
+
+
+def skill_record(kind, repo, plugin, version, skill_dir, dir_name):
+    skill_md = skill_dir / "SKILL.md"
+    fields = read_frontmatter(skill_md)
+    resource, other, files = root_listing(skill_dir)
+    return {
+        "kind": kind, "repo": repo, "plugin": plugin, "plugin_version": version,
+        # Claude Code names a skill by its frontmatter and falls back to the directory.
+        "name": frontmatter_name(fields) or dir_name, "dir_name": dir_name,
+        "skill_md": str(skill_md), "skill_dir": str(skill_dir),
+        "resource_dirs": resource, "other_dirs": other, "root_files": files,
+        "upload_issues": upload_issues(fields),
+    }
+
+
+def inventory_plugins(enabled):
+    """One record per skill of each installed plugin, marked with whether the
+    plugin is enabled. Returns (records, whether installed_plugins.json was the
+    source, the installs whose directory is gone, the installs for other projects)."""
+    versions, missing, elsewhere = installed_versions()
+    known = versions is not None
+    records = []
+    for (repo, plugin), installs in sorted((versions if known else cached_versions()).items(),
+                                           key=lambda item: (item[0][0] or "", item[0][1])):
+        for version, version_dir in installs:
+            on = is_enabled(enabled, repo, plugin, version_dir)
+            for skill_dir in skill_dirs_of(version_dir, repo, plugin):
+                # A root-level SKILL.md (e.g. humanizer) takes the plugin's name.
+                dir_name = plugin if skill_dir == version_dir else skill_dir.name
+                record = skill_record("plugin", repo, plugin, version, skill_dir, dir_name)
+                record["enabled"] = on
+                records.append(record)
+    return records, known, missing, elsewhere
 
 
 def inventory_personal():
@@ -128,61 +241,124 @@ def inventory_personal():
             if not skill_md.is_file() or str(skill_md) in seen:
                 continue
             seen.add(str(skill_md))
-            records.append({
-                "kind": "personal", "repo": None, "plugin": None,
-                "plugin_version": None, "name": entry.name,
-                "skill_md": str(skill_md), "skill_dir": str(real),
-                "resource_dirs": resource_dirs_of(real),
-                "enabled": True,  # Personal skills are always the user's own — keep the schema uniform.
-            })
+            record = skill_record("personal", None, None, None, real, entry.name)
+            record["enabled"] = True  # Personal skills are always the user's own — keep the schema uniform.
+            records.append(record)
     return records
 
 
-def enabled_plugin_names():
-    # settings.json enabledPlugins is the ground truth for "installed". Accept a
-    # dict of {name: bool} or a plain list; normalize away any @repo suffix.
-    enabled = (load_json(SETTINGS) or {}).get("enabledPlugins")
-    names = set()
-    if isinstance(enabled, dict):
-        names = {k.split("@")[0].split("/")[-1] for k, v in enabled.items() if v}
-    elif isinstance(enabled, list):
-        names = {str(k).split("@")[0].split("/")[-1] for k in enabled}
-    return names
+def enabled_plugins():
+    """enabledPlugins merged key by key over the settings files, a later file
+    overriding an earlier one. None when no file sets it, which is different from
+    a file that sets every plugin to false."""
+    merged, known = {}, False
+    for path in SETTINGS:
+        enabled = load_dict(path).get("enabledPlugins")
+        if isinstance(enabled, dict):
+            known = True
+            merged.update({str(k): bool(v) for k, v in enabled.items()})
+        elif isinstance(enabled, list):
+            known = True
+            merged.update({str(k): True for k in enabled})
+    return merged if known else None
+
+
+def is_enabled(enabled, repo, plugin, version_dir):
+    """A plugin is keyed `<plugin>@<marketplace>`, so two marketplaces' same-named
+    plugins are told apart. A key without the marketplace names the plugin alone.
+    A plugin no key names is as its defaultEnabled says, the marketplace entry's
+    over the manifest's, and enabled when neither sets it."""
+    if enabled is None:
+        return None
+    for key in (f"{plugin}@{repo}", plugin):
+        if key in enabled:
+            return enabled[key]
+    for source in (marketplace_entry(version_dir, repo, plugin),
+                   load_dict(version_dir / ".claude-plugin" / "plugin.json")):
+        if isinstance(source.get("defaultEnabled"), bool):
+            return source["defaultEnabled"]
+    return True
 
 
 def desktop_mcp_servers():
-    data = load_json(DESKTOP_CONFIG)
+    """(servers, found, error). `found` is true only when the config parsed, and
+    `error` says why a config that is there could not be used."""
+    try:
+        data = json.loads(DESKTOP_CONFIG.read_text(encoding="utf-8-sig"))
+    except FileNotFoundError:
+        return [], False, None
+    except (OSError, ValueError) as exc:
+        return [], False, str(exc)
     if not isinstance(data, dict):
-        return [], False
+        return [], False, "the top level is not a JSON object"
     servers = data.get("mcpServers")
-    return (sorted(servers), True) if isinstance(servers, dict) else ([], True)
+    return (sorted(servers) if isinstance(servers, dict) else []), True, None
+
+
+def desktop_extensions():
+    """Extensions installed from Desktop's Extensions screen are MCP servers that
+    never appear in claude_desktop_config.json. The app records them beside it in
+    extensions-installations.json, an internal file with no published format, so
+    this reads it loosely and returns nothing for a shape it does not recognize."""
+    found = load_dict(DESKTOP_CONFIG.parent / "extensions-installations.json").get("extensions")
+    if isinstance(found, dict):
+        found = [dict(ext, id=ext.get("id") or key) for key, ext in found.items()
+                 if isinstance(ext, dict)]
+    out = []
+    for ext in found if isinstance(found, list) else []:
+        manifest = ext.get("manifest") if isinstance(ext, dict) else None
+        manifest = manifest if isinstance(manifest, dict) else {}
+        ext_id = ext.get("id") if isinstance(ext, dict) else None
+        name = manifest.get("name") or manifest.get("display_name") or ext_id
+        if name:
+            out.append({"id": str(ext_id or name), "name": str(name)})
+    return sorted(out, key=lambda ext: (ext["name"].lower(), ext["id"]))
 
 
 def main():
-    plugins = inventory_plugins()
+    enabled = enabled_plugins()
+    plugins, installed_known, missing, elsewhere = inventory_plugins(enabled)
     personal = inventory_personal()
-    enabled = enabled_plugin_names()
-    for rec in plugins:
-        rec["enabled"] = (rec["plugin"] in enabled) if enabled else None
-    # A cached-but-disabled plugin isn't one of "the user's skills", so drop it from the
-    # export work-list. Only drop when enabledPlugins is actually known — with enabled==None
-    # we can't tell, so keep everything rather than guess. Report the drop, never silently.
+    # A cached-but-disabled plugin isn't one of "the user's skills", so it comes off the
+    # export work-list: one a settings file turns off, or one no file names whose
+    # defaultEnabled is false. Only when enabledPlugins is actually known — with
+    # enabled==None we can't tell, so keep everything rather than guess. The skills taken
+    # off are named in skipped_disabled, never dropped silently.
     dropped = [r for r in plugins if r["enabled"] is False]
     plugins = [r for r in plugins if r["enabled"] is not False]
-    servers, cfg_found = desktop_mcp_servers()
+    servers, cfg_found, cfg_error = desktop_mcp_servers()
+    extensions = desktop_extensions()
     out = {
         "desktop_mcp_servers": servers,
+        "desktop_extensions": extensions,
         "desktop_config_found": cfg_found,
-        "enabled_plugins_known": bool(enabled),
+        "desktop_config_error": cfg_error,
+        "enabled_plugins_known": enabled is not None,
+        "installed_plugins_known": installed_known,
+        "plugin_cache_found": CACHE.is_dir(),
+        "missing_install_paths": missing,
+        "skipped_disabled": [{"repo": r["repo"], "plugin": r["plugin"], "name": r["name"]}
+                             for r in dropped],
+        "skipped_other_projects": elsewhere,
         "skills": sorted(plugins + personal,
                          key=lambda r: (r["kind"], r.get("plugin") or "", r["name"])),
     }
     json.dump(out, sys.stdout, indent=2)
     sys.stdout.write("\n")
+    if cfg_found:
+        cfg_note = "config found"
+    else:
+        cfg_note = "desktop config UNREADABLE" if cfg_error else "NO desktop config"
+    cache_note = "" if CACHE.is_dir() else f", NO plugin cache at {CACHE}"
     dropped_note = f", {len(dropped)} disabled-plugin skills skipped" if dropped else ""
+    projects = {(e["repo"], e["plugin"]) for e in elsewhere}
+    elsewhere_note = (f", {len(projects)} plugins installed only for other projects"
+                      if projects else "")
+    missing_note = f", {len(missing)} install paths missing" if missing else ""
     print(f"[inventory] {len(plugins)} plugin skills, {len(personal)} personal "
-          f"skills, {len(servers)} Desktop MCP servers "
-          f"({'config found' if cfg_found else 'NO desktop config'}){dropped_note}.",
+          f"skills, {len(servers)} Desktop MCP servers ({cfg_note}), "
+          f"{len(extensions)} Desktop extensions{cache_note}{dropped_note}"
+          f"{elsewhere_note}{missing_note}.",
           file=sys.stderr)
 
 
