@@ -307,7 +307,10 @@ if the user's upload is refused for it, shorten a copy as described above.
 - A directory whose name starts with a dot (`.claude`, `.aws`, `.ssh` and the like hold settings
   and keys) or is `secrets` or `credentials`, in any case, never ships: not at the root, not at
   any depth inside a shipped directory, and not on a mention. It is listed as left out.
-- A symlinked directory inside a shipped one is followed, like a symlinked file.
+- A symlink, file or directory, is followed only when it resolves inside the skill's own folder.
+  One that leads anywhere else, a shared folder elsewhere in the same plugin included, never ships
+  and is listed as left out: an ordinary-looking name such as `hosts.yml` can hold a token, so
+  where a link leads is the only safe test.
 - A symlink is judged by what it leads to as well as by its own name. One that leads to a
   credential file (below), to a file directly inside a dot or secrets directory, or to such a
   directory never ships, whatever the link is called, and is listed as left out. Only the target's
@@ -330,8 +333,8 @@ if the user's upload is refused for it, shorten a copy as described above.
 - `?` lines on a packaged skill: a point Anthropic's pages disagree on (today only a description
   over 200 characters). They do not fail the exit code.
 - `- left out` lines for what curation kept back: directories with their file counts, root files
-  SKILL.md does not name, credential files, and symlinks to a credential file or a dot or secrets
-  directory. Read them against what the skill does. When a
+  SKILL.md does not name, credential files, symlinks to a credential file or a dot or secrets
+  directory, and symlinks that lead outside the skill folder. Read them against what the skill does. When a
   left-out directory or file is one the skill uses, say so on its report line rather than calling
   it ready.
 - Member file names that look credential-related (`secret`, `token`, `credential`, `apikey` in the

@@ -342,9 +342,8 @@ class Curation(PackageCase):
                          ["noisy/SKILL.md", "noisy/scripts/run.py"])
 
     def test_symlinked_subdirectory_of_a_kept_one_ships(self):
-        skill = self.skill("linked", files={"references/a.md": ""})
-        shared = write(self.tmp / "shared" / "deep.md", "deep").parent
-        self.symlink(shared, skill / "references" / "shared")
+        skill = self.skill("linked", files={"references/a.md": "", "vendor/deep.md": "deep"})
+        self.symlink(skill / "vendor", skill / "references" / "shared")
         proc, out = self.package([self.entry(skill)])
         self.assert_packaged(proc, out, "linked.zip")
         self.assertIn("linked/references/shared/deep.md", self.members(out / "linked.zip"))
@@ -446,24 +445,41 @@ class Credentials(PackageCase):
                       "scripts/helper, scripts/keys/\n", proc.stdout)
         self.assertNotIn("left out, directories", proc.stdout)
 
-    def test_symlinks_to_ordinary_files_and_directories_ship(self):
-        # The plugin cache sits under ~/.claude, so a link that resolves there is fine.
-        vd = self.version_dir("mkt", "p", "1.0.0")
-        write(vd / "shared" / "tool.py", "print(1)")
-        write(vd / "shared" / "notes.md", "notes")
-        skill = self.plugin_skill("mkt", "p", "1.0.0", "linked-ok", files={"scripts/run.py": ""},
-                                  body="Read guide.md.\n")
-        self.symlink(vd / "shared" / "tool.py", skill / "scripts" / "tool.py")
-        self.symlink(vd / "shared", skill / "references")
-        self.symlink(vd / "shared" / "notes.md", skill / "guide.md")
-        self.symlink(self.outside() / "notes" / "secret-santa.md", skill / "scripts" / "party.md")
+    def test_symlinks_to_ordinary_files_and_directories_inside_the_skill_ship(self):
+        # The plugin cache sits under ~/.claude, so a dot directory above the skill is fine.
+        skill = self.plugin_skill("mkt", "p", "1.0.0", "linked-ok", files={
+            "scripts/run.py": "", "shared/tool.py": "print(1)", "shared/notes.md": "notes"},
+            body="Read guide.md.\n")
+        self.symlink(skill / "shared" / "tool.py", skill / "scripts" / "tool.py")
+        self.symlink(skill / "shared", skill / "references")
+        self.symlink(skill / "shared" / "notes.md", skill / "guide.md")
         proc, out = self.package([self.entry(skill)])
         self.assert_packaged(proc, out, "linked-ok.zip")
         self.assertEqual(self.members(out / "linked-ok.zip"), [
             "linked-ok/SKILL.md", "linked-ok/guide.md", "linked-ok/references/notes.md",
-            "linked-ok/references/tool.py", "linked-ok/scripts/party.md",
-            "linked-ok/scripts/run.py", "linked-ok/scripts/tool.py"])
-        self.assertNotIn("symlink to", proc.stdout)
+            "linked-ok/references/tool.py", "linked-ok/scripts/run.py", "linked-ok/scripts/tool.py"])
+        self.assertNotIn("symlink t", proc.stdout)
+
+    def test_symlinks_that_leave_the_skill_folder_stay_out(self):
+        # Ordinary names on purpose: a token file such as ~/.config/gh/hosts.yml passes every
+        # name rule, so only where a link leads can keep it out.
+        home = self.outside()
+        write(home / ".config" / "gh" / "hosts.yml", "oauth_token: FAKE")
+        vd = self.version_dir("mkt", "p", "1.0.0")
+        write(vd / "shared" / "tool.py", "print(1)")
+        skill = self.plugin_skill("mkt", "p", "1.0.0", "leaky", files={"scripts/run.py": ""},
+                                  body="Read guide.md and hosts.yml.\n")
+        self.symlink(home / ".config" / "gh" / "hosts.yml", skill / "scripts" / "hosts.yml")
+        self.symlink(home / "notes" / "secret-santa.md", skill / "scripts" / "party.md")
+        self.symlink(home / "notes", skill / "scripts" / "notes")
+        self.symlink(home / "notes" / "secret-santa.md", skill / "guide.md")
+        self.symlink(home / ".config" / "gh" / "hosts.yml", skill / "hosts.yml")
+        self.symlink(vd / "shared", skill / "references")
+        proc, out = self.package([self.entry(skill)])
+        self.assert_packaged(proc, out, "leaky.zip")
+        self.assertEqual(self.members(out / "leaky.zip"), ["leaky/SKILL.md", "leaky/scripts/run.py"])
+        self.assertIn("left out, symlink that leads outside the skill folder: guide.md, hosts.yml, "
+                      "references/, scripts/hosts.yml, scripts/notes/, scripts/party.md\n", proc.stdout)
 
     def test_skill_folder_name_does_not_raise_the_warning(self):
         skill = self.skill("design-tokens", files={"references/a.md": ""})

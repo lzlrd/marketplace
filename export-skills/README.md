@@ -74,6 +74,9 @@ starts outside the skill, such as `~/.claude/settings.json`, points into nothing
 (`.claude`, `.aws`, `.ssh` and the like) or a `secrets` or `credentials` folder never ships, at any
 depth, mentioned or not. Nor do credential files (`.env`, private keys, OAuth tokens, `.npmrc` and
 the like), or a symlink that leads to one of those files or folders, whatever the link is called.
+A symlink ships only when it leads somewhere inside the skill's own folder; one that leads out,
+even to a shared folder elsewhere in its plugin, is left out, so a link cannot pull in a file such
+as a token under `~/.config`.
 Everything left out is listed per skill, so a missing directory shows in the output.
 
 The output folder keeps an index of the zips the packager writes, recorded before each is written.

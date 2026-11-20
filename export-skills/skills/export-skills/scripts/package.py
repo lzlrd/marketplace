@@ -96,6 +96,16 @@ def private_link(path):
     return is_credential_file(real.name) or is_private_dir(real.parent.name)
 
 
+def leaves_skill(path, root):
+    """True when `path` is a symlink that resolves outside the skill folder `root`
+    (already resolved). Such a link is never followed, whatever its target is
+    called: it could pull in any file the user can read, ~/.config included."""
+    if not path.is_symlink():
+        return False
+    real = os.path.realpath(path)
+    return real != root and not real.startswith(root + os.sep)
+
+
 def looks_secret(rel):
     """Advisory check on a member's file name. Only the name counts, so a skill
     called design-tokens does not flag every file; a directory named for secrets
@@ -136,12 +146,14 @@ def plural(n, noun):
     return f"{n} {noun}{'' if n == 1 else 's'}"
 
 
-def walk_kept(top, skill_dir, wanted, members, dropped, denied, linked):
+def walk_kept(top, skill_dir, root, wanted, members, dropped, denied, linked, outside):
     """Collect the files under `top` into `members`. A symlinked directory is
-    followed like a real one, unless it leads back to one of its own parents. A
-    private directory is skipped, and so is a DROP-named one unless it is in
-    `wanted`; each is noted in `dropped`. A credential file is noted in `denied`,
-    and a symlink to either, file or directory, in `linked`."""
+    followed like a real one when it resolves inside the skill folder `root` and
+    does not lead back to one of its own parents. A private directory is skipped,
+    and so is a DROP-named one unless it is in `wanted`; each is noted in
+    `dropped`. A credential file is noted in `denied`, a symlink to either, file
+    or directory, in `linked`, and any other symlink that leaves the skill in
+    `outside`."""
     for here, dirnames, filenames in os.walk(top, followlinks=True):
         here = Path(here)
         if len(members) > WALK_CAP:
@@ -154,6 +166,9 @@ def walk_kept(top, skill_dir, wanted, members, dropped, denied, linked):
             if private_link(here / name):
                 linked.append(rel + "/")
                 dirnames.remove(name)
+            elif leaves_skill(here / name, root):
+                outside.append(rel + "/")
+                dirnames.remove(name)
             elif is_private_dir(name) or (name in DROP_DIRS and rel not in wanted):
                 dropped.add(rel)
                 dirnames.remove(name)
@@ -165,6 +180,8 @@ def walk_kept(top, skill_dir, wanted, members, dropped, denied, linked):
             rel = path.relative_to(skill_dir)
             if private_link(path):
                 linked.append(rel.as_posix())
+            elif leaves_skill(path, root):
+                outside.append(rel.as_posix())
             elif is_credential_file(name):
                 denied.append(rel.as_posix())
             else:
@@ -180,19 +197,22 @@ def curated_members(skill_dir):
     the zip or leak stray files. `left_out` says what stayed behind, one line per
     reason, so nothing is dropped without the listing showing it."""
     skill_dir = Path(skill_dir)
+    root = os.path.realpath(skill_dir)  # A link must resolve inside this to be followed.
     skill_md = skill_dir / "SKILL.md"
     skill_text = skill_md.read_text(encoding="utf-8", errors="ignore")
     children = sorted(skill_dir.iterdir())
     wanted = set()  # Directories that ship because the skill's own text points into them.
     while True:
-        members, dropped, denied, linked = [(skill_md, Path("SKILL.md"))], set(), [], []
+        members, dropped, denied, linked, outside = [(skill_md, Path("SKILL.md"))], set(), [], [], []
         for child in children:
             if not child.is_dir():
                 continue
             if private_link(child):
                 linked.append(child.name + "/")
+            elif leaves_skill(child, root):
+                outside.append(child.name + "/")
             elif child.name in KEEP_DIRS or child.name in wanted:
-                walk_kept(child, skill_dir, wanted, members, dropped, denied, linked)
+                walk_kept(child, skill_dir, root, wanted, members, dropped, denied, linked, outside)
             else:
                 dropped.add(child.name)
         texts = [(rel.parent.as_posix(), path.read_text(encoding="utf-8", errors="ignore"))
@@ -209,6 +229,8 @@ def curated_members(skill_dir):
             continue
         if private_link(child):
             linked.append(child.name)
+        elif leaves_skill(child, root):
+            outside.append(child.name)
         elif is_credential_file(child.name):
             denied.append(child.name)
         elif named_in(child.name, skill_text):
@@ -226,6 +248,9 @@ def curated_members(skill_dir):
     if linked:
         left_out.append("left out, symlink to a credential file or a dot or secrets directory: "
                         + ", ".join(sorted(linked)))
+    if outside:
+        left_out.append("left out, symlink that leads outside the skill folder: "
+                        + ", ".join(sorted(outside)))
     return sorted(members, key=lambda m: m[1].as_posix()), left_out
 
 
